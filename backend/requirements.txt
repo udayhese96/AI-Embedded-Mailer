@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+authlib
+httpx
+python-dotenv
+cryptography
+starlette
+itsdangerous
+python-multipart
