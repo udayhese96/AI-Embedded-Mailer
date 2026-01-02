@@ -217,7 +217,10 @@ export default function App() {
         <Route
           path="/ai-generator"
           element={
-            <AIGeneratorPage onGenerateTemplate={handleGenerateTemplate} />
+            <AIGeneratorPage
+              onGenerateTemplate={handleGenerateTemplate}
+              gmailConnection={gmailConnection}
+            />
           }
         />
 

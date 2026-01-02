@@ -278,17 +278,39 @@ STRICT RULES (DO NOT BREAK):
 - No <style> tags, no <script>, no external CSS
 - Gmail, Outlook, Yahoo compatible
 - Mobile & desktop responsive
-- Do NOT use base64 images in output
-- Do NOT use background-image CSS property
 - Start output with <!DOCTYPE html> or <html>
 - End output with </html>
 
-FOR IMAGES:
-- Use real placeholder images from: https://placehold.co/
-- Logo example: <img src="https://placehold.co/150x50/6366f1/ffffff?text=Logo" alt="Logo">
-- Banner example: <img src="https://placehold.co/600x200/6366f1/ffffff?text=Banner" alt="Banner">
-- Product example: <img src="https://placehold.co/300x300/e2e8f0/374151?text=Product" alt="Product">
-- Hero image: <img src="https://placehold.co/600x300/6366f1/ffffff?text=Hero+Image" alt="Hero">
+FOR IMAGES - USE REAL WORKING IMAGES:
+- Use Unsplash Source for real, high-quality images that WORK in emails
+- Format: https://images.unsplash.com/photo-{ID}?w={width}&h={height}&fit=crop
+- All images must have: width="100%" style="display:block;max-width:600px;"
+
+WORKING IMAGE EXAMPLES (copy these exact URLs):
+- Restaurant/Food: https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=300&fit=crop
+- Restaurant Interior: https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=300&fit=crop
+- Pizza/Italian: https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=300&fit=crop
+- Indian Food: https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&h=300&fit=crop
+- Desserts: https://images.unsplash.com/photo-1551024601-bec78aea704b?w=600&h=300&fit=crop
+- Coffee/Cafe: https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=300&fit=crop
+- Welcome/Hello: https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&h=300&fit=crop
+- Newsletter: https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=600&h=300&fit=crop
+- Shopping/Promo: https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&h=300&fit=crop
+- Tech/Product: https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&h=300&fit=crop
+- Business: https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=300&fit=crop
+- Travel: https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=300&fit=crop
+
+IMAGE BEST PRACTICES:
+- Always use alt text describing the image
+- Add style="display:block;border:0;outline:none;text-decoration:none;"
+- Wrap images in <td align="center">
+- Use width attribute (not just CSS) for Outlook compatibility
+- Keep images under 600px width for email
+
+VISUAL ENHANCEMENTS (in addition to images):
+- Use Unicode emojis (🎉 🔥 ⭐ 🚀 ✨ 💡) for visual interest
+- Use colored backgrounds for sections
+- Use bold typography for headers
 
 Failure to follow these rules is an error. Output ONLY the HTML code."""
 
@@ -385,6 +407,17 @@ async def generate_email(
         elif "<html" in html_lower:
             idx = html_lower.find("<html")
             html_content = html_content[idx:]
+        
+        # Make all links open in new tab by adding target="_blank" and rel="noopener noreferrer"
+        import re
+        # Replace <a> tags that don't have target attribute
+        html_content = re.sub(
+            r'<a\s+([^>]*?)href=',
+            lambda m: '<a ' + m.group(1) + 'target="_blank" rel="noopener noreferrer" href=' 
+                if 'target=' not in m.group(0).lower() else m.group(0),
+            html_content,
+            flags=re.IGNORECASE
+        )
         
         return {
             "success": True,
