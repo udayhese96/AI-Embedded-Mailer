@@ -2,13 +2,15 @@ import os
 import base64
 import httpx
 import uuid
-from fastapi import FastAPI, Request, HTTPException, Form
+from typing import List, Optional
+from fastapi import FastAPI, Request, HTTPException, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from cryptography.fernet import Fernet
 from starlette.middleware.sessions import SessionMiddleware
+from openai import OpenAI
 
 # ------------------ LOAD ENVIRONMENT VARIABLES ---------------------
 load_dotenv()
@@ -18,21 +20,30 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 FERNET_KEY = os.getenv("FERNET_KEY")
 SESSION_SECRET = os.getenv("SESSION_SECRET")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, FERNET_KEY]):
     raise ValueError("Missing required environment variables in .env file")
 
 fernet = Fernet(FERNET_KEY.encode())
 
+# Initialize OpenRouter client (for AI email generation)
+openrouter_client = None
+if OPENROUTER_API_KEY:
+    openrouter_client = OpenAI(
+        api_key=OPENROUTER_API_KEY,
+        base_url="https://openrouter.ai/api/v1"
+    )
+
 from fastapi.middleware.cors import CORSMiddleware
 
 # ------------------ APP INITIALIZATION ----------------------------
-app = FastAPI(title="Gmail OAuth Sender")
+app = FastAPI(title="Gmail OAuth Sender & AI Email Generator")
 
 # 1. CORS Middleware (CRITICAL for frontend communication)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend URL
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React/Vite frontend URLs
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -40,6 +51,7 @@ app.add_middleware(
 
 # 2. Session Middleware (Required for OAuth)
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
+
 
 # ------------------ OAUTH CONFIG -----------------------------------
 oauth = OAuth()
@@ -252,16 +264,153 @@ async def disconnect_user(session_id: str):
 
 
 # ==================================================================
+# 6️⃣ AI EMAIL GENERATION (Claude 3.5 Haiku via OpenRouter)
+# ==================================================================
+
+# System prompt for email HTML generation (STRICT - HTML ONLY)
+EMAIL_SYSTEM_PROMPT = """You are an expert HTML email template generator for production use.
+
+STRICT RULES (DO NOT BREAK):
+- Output ONLY valid HTML (no markdown, no explanation, no text before or after)
+- Use table-based layout ONLY
+- Max email width: 600px
+- Inline CSS ONLY (style attributes on elements)
+- No <style> tags, no <script>, no external CSS
+- Gmail, Outlook, Yahoo compatible
+- Mobile & desktop responsive
+- Do NOT use base64 images in output
+- Do NOT use background-image CSS property
+- Start output with <!DOCTYPE html> or <html>
+- End output with </html>
+
+FOR IMAGES:
+- Use real placeholder images from: https://placehold.co/
+- Logo example: <img src="https://placehold.co/150x50/6366f1/ffffff?text=Logo" alt="Logo">
+- Banner example: <img src="https://placehold.co/600x200/6366f1/ffffff?text=Banner" alt="Banner">
+- Product example: <img src="https://placehold.co/300x300/e2e8f0/374151?text=Product" alt="Product">
+- Hero image: <img src="https://placehold.co/600x300/6366f1/ffffff?text=Hero+Image" alt="Hero">
+
+Failure to follow these rules is an error. Output ONLY the HTML code."""
+
+
+def img_to_base64(file: UploadFile) -> str:
+    """Convert uploaded file to base64 string"""
+    content = file.file.read()
+    file.file.seek(0)  # Reset file pointer for potential re-use
+    return base64.b64encode(content).decode("utf-8")
+
+
+@app.post("/generate-email")
+async def generate_email(
+    prompt: str = Form(..., description="Email intent/description"),
+    images: List[UploadFile] = File(default=[])
+):
+    """
+    Generate email-safe HTML using Claude 3.5 Haiku via OpenRouter.
+    Supports up to 4 images for design reference.
+    """
+    
+    # Check if OpenRouter is configured
+    if not openrouter_client:
+        raise HTTPException(
+            500, 
+            "OpenRouter API key not configured. Please add OPENROUTER_API_KEY to your .env file."
+        )
+    
+    # Validate image count
+    if len(images) > 4:
+        raise HTTPException(400, "Maximum 4 images allowed")
+    
+    # Build message content
+    content = [{"type": "text", "text": prompt}]
+    
+    # Add images to content if provided
+    for img in images:
+        if img.filename:  # Check if file was actually uploaded
+            content_type = img.content_type or "image/png"
+            base64_data = img_to_base64(img)
+            content.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:{content_type};base64,{base64_data}"
+                }
+            })
+    
+    try:
+        # Call Claude 3.5 Haiku via OpenRouter
+        response = openrouter_client.chat.completions.create(
+            model="anthropic/claude-3.5-haiku",
+            messages=[
+                {
+                    "role": "system",
+                    "content": EMAIL_SYSTEM_PROMPT
+                },
+                {
+                    "role": "user",
+                    "content": content
+                }
+            ],
+            temperature=0.3,
+            max_tokens=2000  # Reduced to work with limited credits
+        )
+        
+        html_content = response.choices[0].message.content
+        
+        # Clean up the HTML (remove markdown code blocks if present)
+        if html_content.startswith("```html"):
+            html_content = html_content[7:]
+        elif html_content.startswith("```"):
+            html_content = html_content[3:]
+        if html_content.endswith("```"):
+            html_content = html_content[:-3]
+        html_content = html_content.strip()
+        
+        # Validate that output is actually HTML
+        html_lower = html_content.lower()
+        if not ("<html" in html_lower or "<!doctype" in html_lower or "<table" in html_lower):
+            # If AI didn't return HTML, try to extract it
+            if "<table" in html_lower:
+                # Find the table-based content
+                start_idx = html_content.lower().find("<table")
+                end_idx = html_content.lower().rfind("</table>") + 8
+                if start_idx != -1 and end_idx > start_idx:
+                    html_content = html_content[start_idx:end_idx]
+            else:
+                raise HTTPException(400, "AI did not generate valid HTML. Please try again with a more specific prompt.")
+        
+        # Remove any text before <!DOCTYPE or <html
+        if "<!doctype" in html_lower:
+            idx = html_lower.find("<!doctype")
+            html_content = html_content[idx:]
+        elif "<html" in html_lower:
+            idx = html_lower.find("<html")
+            html_content = html_content[idx:]
+        
+        return {
+            "success": True,
+            "html": html_content,
+            "model": "anthropic/claude-3.5-haiku",
+            "images_used": len([img for img in images if img.filename])
+        }
+        
+    except Exception as e:
+        print(f"OpenRouter API Error: {str(e)}")
+        raise HTTPException(500, f"Failed to generate email: {str(e)}")
+
+
+# ==================================================================
 # ROOT ENDPOINT
 # ==================================================================
 @app.get("/")
 async def root():
     return {
-        "service": "Gmail OAuth Email Sender (Secure Session Mode)",
+        "service": "Gmail OAuth Email Sender & AI Email Generator",
         "endpoints": {
             "connect": "/connect/google",
             "send": "/send-email",
             "check": "/check-connection/{session_id}",
-            "disconnect": "/disconnect/{session_id}"
+            "disconnect": "/disconnect/{session_id}",
+            "generate_email": "/generate-email (POST with prompt + optional images)"
         }
     }
+

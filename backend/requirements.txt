@@ -7,3 +7,4 @@ cryptography
 starlette
 itsdangerous
 python-multipart
+openai

@@ -187,3 +187,14 @@
 html {
   font-size: var(--font-size);
 }
+
+/* Force white text on AI generator input */
+.ai-input-white {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.ai-input-white::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+}
