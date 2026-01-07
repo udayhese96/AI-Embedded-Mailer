@@ -61,8 +61,13 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="Gmail OAuth Sender & AI Email Generator")
 
 # 1. CORS Middleware (CRITICAL for frontend communication)
-# Get frontend URL from environment variable
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+# Get frontend URL from environment variable and strip trailing slash
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+
+# Debug: Print CORS configuration
+print(f"🔧 CORS Configuration:")
+print(f"   FRONTEND_URL: {FRONTEND_URL}")
+print(f"   Allowed Origins: {[FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000']}")
 
 app.add_middleware(
     CORSMiddleware,
