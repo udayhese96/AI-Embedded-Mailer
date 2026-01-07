@@ -8,3 +8,4 @@ starlette
 itsdangerous
 python-multipart
 openai
+supabase

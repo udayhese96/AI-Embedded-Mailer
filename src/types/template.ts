@@ -24,3 +24,28 @@ export interface GmailConnection {
   email?: string;
   accessToken?: string;
 }
+
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: Date;
+}
+
+export interface TemplateCheckpoint {
+  id: string;
+  templateId: string;
+  version: number;
+  html: string;
+  userPrompt: string;
+  timestamp: Date;
+  label?: string;
+}
+
+export interface ChatSession {
+  id: string;
+  messages: Message[];
+  currentTemplate: EmailTemplate | null;
+  checkpoints: TemplateCheckpoint[];
+  createdAt: Date;
+  updatedAt: Date;
+}

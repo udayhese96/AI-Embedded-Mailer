@@ -12,6 +12,7 @@ import {
 import { EmailTemplate, EmailDraft, GmailConnection } from './types/template';
 import { preloadedTemplates } from './data/preloadedTemplates';
 import CryptoJS from 'crypto-js';
+import { API_URL } from './config/api';
 
 export default function App() {
   const [templates, setTemplates] = useState<EmailTemplate[]>(preloadedTemplates);
@@ -19,6 +20,17 @@ export default function App() {
   const [gmailConnection, setGmailConnection] = useState<GmailConnection>({
     isConnected: false
   });
+
+  // AI Generator persistent state (survives navigation)
+  const [aiMessages, setAiMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }>>([
+    {
+      role: 'assistant',
+      content: "👋 Hi! I'm your email template assistant.\n\nDescribe the email you want to create and I'll generate production-ready HTML that works perfectly in Gmail, Outlook, and Yahoo.",
+      timestamp: new Date(),
+    },
+  ]);
+  const [aiCurrentTemplate, setAiCurrentTemplate] = useState<EmailTemplate | null>(null);
+
   const [stats, setStats] = useState({
     totalTemplates: preloadedTemplates.length,
     customTemplates: 0,
@@ -51,7 +63,7 @@ export default function App() {
         const encryptedSession = CryptoJS.AES.encrypt(sessionId, "my_super_secret_client_key").toString();
 
         try {
-          const response = await fetch(`http://127.0.0.1:8000/check-connection/${sessionId}`);
+          const response = await fetch(`${API_URL}/check-connection/${sessionId}`);
           if (response.ok) {
             const data = await response.json();
 
@@ -82,7 +94,7 @@ export default function App() {
             const decryptedSessionId = bytes.toString(CryptoJS.enc.Utf8);
 
             if (decryptedSessionId) {
-              const response = await fetch(`http://127.0.0.1:8000/check-connection/${decryptedSessionId}`);
+              const response = await fetch(`${API_URL}/check-connection/${decryptedSessionId}`);
               if (response.ok) {
                 const data = await response.json();
                 if (data.is_connected) {
@@ -148,7 +160,21 @@ export default function App() {
   };
 
   const handleGenerateTemplate = (template: EmailTemplate) => {
-    setTemplates(prev => [...prev, template]);
+    // Check if template already exists (for modifications)
+    const existingIndex = templates.findIndex(t => t.id === template.id);
+
+    if (existingIndex !== -1) {
+      // Update existing template
+      setTemplates(prev => {
+        const updated = [...prev];
+        updated[existingIndex] = template;
+        return updated;
+      });
+    } else {
+      // Add new template
+      setTemplates(prev => [...prev, template]);
+    }
+
     setSelectedTemplate(template);
   };
 
@@ -165,7 +191,7 @@ export default function App() {
     if (confirm('Are you sure you want to disconnect your Gmail account?')) {
       if (gmailConnection.accessToken) {
         try {
-          await fetch(`http://127.0.0.1:8000/disconnect/${gmailConnection.accessToken}`, { method: 'POST' });
+          await fetch(`${API_URL}/disconnect/${gmailConnection.accessToken}`, { method: 'POST' });
         } catch (e) {
           console.error("Failed to disconnect from backend", e);
         }
@@ -220,6 +246,10 @@ export default function App() {
             <AIGeneratorPage
               onGenerateTemplate={handleGenerateTemplate}
               gmailConnection={gmailConnection}
+              messages={aiMessages}
+              setMessages={setAiMessages}
+              currentTemplate={aiCurrentTemplate}
+              setCurrentTemplate={setAiCurrentTemplate}
             />
           }
         />

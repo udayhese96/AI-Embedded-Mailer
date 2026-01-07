@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EmailTemplate, EmailDraft, GmailConnection } from '../types/template';
 import { Send, Eye, X, Plus, ArrowLeft, FileText, CheckCircle } from 'lucide-react';
+import { API_URL } from '../config/api';
 
 interface EmailComposerProps {
   template: EmailTemplate | null;
@@ -67,7 +68,7 @@ export function EmailComposer({ template, gmailConnection, onBack, onSend }: Ema
         formData.append('cc', draft.cc.join(', '));
       }
 
-      const response = await fetch('http://127.0.0.1:8000/send-email', {
+      const response = await fetch(`${API_URL}/send-email`, {
         method: 'POST',
         body: formData,
       });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GmailConnection } from '../types/template';
 import { Mail, CheckCircle, AlertCircle, Link2, Settings, ArrowLeft, Info } from 'lucide-react';
+import { API_URL } from '../config/api';
 
 interface GmailIntegrationProps {
   connection: GmailConnection;
@@ -14,7 +15,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
 
   const handleConnect = () => {
     // Redirect to Backend OAuth endpoint
-    window.location.href = "http://127.0.0.1:8000/connect/google";
+    window.location.href = `${API_URL}/connect/google`;
   };
 
   return (
