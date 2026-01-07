@@ -545,7 +545,6 @@ async def generate_email(
             html_content = html_content[idx:]
         
         # Make all links open in new tab by adding target="_blank" and rel="noopener noreferrer"
-        import re
         # Replace <a> tags that don't have target attribute
         html_content = re.sub(
             r'<a\s+([^>]*?)href=',
