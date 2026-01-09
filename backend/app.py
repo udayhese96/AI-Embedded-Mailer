@@ -171,8 +171,8 @@ async def google_callback(request: Request):
         print(f"SUCCESS: Created session {session_id} for {email}")
 
         # Redirect back to frontend with SESSION ID (Not email)
-        frontend_url = f"http://localhost:3000/settings?connected=true&session_id={session_id}"
-        return RedirectResponse(url=frontend_url)
+        redirect_to_frontend = f"{FRONTEND_URL}/settings?connected=true&session_id={session_id}"
+        return RedirectResponse(url=redirect_to_frontend)
         
     except Exception as e:
         print(f"CALLBACK ERROR: {str(e)}")
