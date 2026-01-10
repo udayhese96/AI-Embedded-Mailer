@@ -23,6 +23,7 @@ import {
     ChevronUp,
     Link,
     RefreshCw,
+    History,
 } from 'lucide-react';
 import { EmailTemplate, GmailConnection, Message, ChatSession, TemplateCheckpoint } from '../types/template';
 import { saveChatSession, loadChatSession, clearChatSession, saveCheckpoint } from '../utils/chatStorage';
@@ -89,6 +90,8 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
     // Resizable Panel State
     const [leftPanelWidth, setLeftPanelWidth] = useState(45); // percentage
     const [isResizing, setIsResizing] = useState(false);
+    const [showVersionHistory, setShowVersionHistory] = useState(false);
+    const [restoreConfirm, setRestoreConfirm] = useState<TemplateCheckpoint | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Load chat session on mount
@@ -279,31 +282,33 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
 
         const userMessage = input.trim();
         setInput('');
-        setMessages((prev) => [
-            ...prev,
-            { role: 'user', content: userMessage, timestamp: new Date() },
-        ]);
+
+        // Add user message first
+        const newUserMessage: Message = { role: 'user', content: userMessage, timestamp: new Date() };
+        setMessages((prev) => [...prev, newUserMessage]);
         setIsGenerating(true);
 
         try {
             const formData = new FormData();
 
-            // Detect if this is a modification request
-            const isModificationRequest = currentTemplate && /fix|change|update|modify|where is|cannot see|can't see|not showing|replace|edit|adjust|make it|add|remove|delete/i.test(userMessage);
+            // Always send the user's prompt
+            formData.append('prompt', userMessage);
 
-            if (isModificationRequest && currentTemplate) {
-                // Include existing HTML for modification
-                const modificationPrompt = `MODIFICATION REQUEST: User wants to modify an existing template.
+            // Send full conversation history (excluding the greeting and current message)
+            const historyToSend = messages
+                .filter((msg, idx) => idx > 0) // Skip the initial greeting
+                .map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }));
 
-USER REQUEST: ${userMessage}
+            if (historyToSend.length > 0) {
+                formData.append('history', JSON.stringify(historyToSend));
+            }
 
-EXISTING HTML TO MODIFY:
-${currentTemplate.html}
-
-Please modify the above HTML according to the user's request. Keep the overall structure but apply the changes. Output ONLY the modified HTML.`;
-                formData.append('prompt', modificationPrompt);
-            } else {
-                formData.append('prompt', userMessage);
+            // Send current template HTML if it exists (for modifications)
+            if (currentTemplate) {
+                formData.append('current_html', currentTemplate.html);
             }
 
             const response = await fetch(`${API_URL}/generate-email`, {
@@ -319,16 +324,18 @@ Please modify the above HTML according to the user's request. Keep the overall s
             const data = await response.json();
 
             if (data.success && data.html) {
-                // If this is a modification, update the existing template
-                // Otherwise, create a new template
-                const updatedTemplate: EmailTemplate = isModificationRequest && currentTemplate ? {
+                // Determine if this is a modification based on existing template
+                const isModification = !!currentTemplate;
+
+                // Create or update template
+                const updatedTemplate: EmailTemplate = isModification && currentTemplate ? {
                     ...currentTemplate,
                     html: data.html,
                     updatedAt: new Date(),
                 } : {
                     id: `ai-${Date.now()}`,
                     name: `AI Generated - ${new Date().toLocaleDateString()}`,
-                    subject: userMessage.slice(0, 100),
+                    subject: data.subject || userMessage.slice(0, 100),
                     category: 'custom',
                     html: data.html,
                     isCustom: true,
@@ -339,7 +346,7 @@ Please modify the above HTML according to the user's request. Keep the overall s
                 setCurrentTemplate(updatedTemplate);
                 onGenerateTemplate(updatedTemplate);
 
-                // Create checkpoint for version control
+                // Create checkpoint for version control - store with associated messages
                 const checkpoint: TemplateCheckpoint = {
                     id: `checkpoint-${Date.now()}`,
                     templateId: updatedTemplate.id,
@@ -347,12 +354,29 @@ Please modify the above HTML according to the user's request. Keep the overall s
                     html: data.html,
                     userPrompt: userMessage,
                     timestamp: new Date(),
+                    label: userMessage.slice(0, 50) + (userMessage.length > 50 ? '...' : ''),
                 };
                 setCheckpoints(prev => [...prev, checkpoint]);
 
-                const successMessage = isModificationRequest && currentTemplate
-                    ? "✨ Done! I've updated your template.\n\nCheck the preview on the right to see the changes, or switch to Code view to see the updated HTML."
-                    : "✨ Done! Your email template is ready.\n\nCheck the preview on the right, or switch to Code view to see the HTML.";
+                // Build response message with change summary if available
+                let successMessage: string;
+                if (isModification && data.changes) {
+                    // Parse bullet points from changes
+                    const changesList = data.changes
+                        .split('•')
+                        .map((c: string) => c.trim())
+                        .filter((c: string) => c.length > 0);
+
+                    if (changesList.length > 0) {
+                        successMessage = `✅ **Template Updated!**\n\n**Changes made:**\n${changesList.map((c: string) => `• ${c}`).join('\n')}\n\n_Check the preview on the right._`;
+                    } else {
+                        successMessage = "✅ Template updated! Check the preview on the right.";
+                    }
+                } else if (isModification) {
+                    successMessage = "✅ Template updated! Check the preview on the right to see the changes.";
+                } else {
+                    successMessage = "✨ **Template Created!**\n\nYour email template is ready. Check the preview on the right, or switch to **Code** view to see the HTML.\n\n_You can now ask me to make changes like:_\n• \"Change the button color to red\"\n• \"Add a footer section\"\n• \"Make the header bigger\"";
+                }
 
                 setMessages((prev) => [
                     ...prev,
@@ -362,14 +386,30 @@ Please modify the above HTML according to the user's request. Keep the overall s
                         timestamp: new Date(),
                     },
                 ]);
+
+                // Auto-set subject if provided by AI
+                if (data.subject && !subject) {
+                    setSubject(data.subject);
+                }
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+            // Parse common errors for better user feedback
+            let friendlyError = errorMessage;
+            if (errorMessage.includes('402')) {
+                friendlyError = "API credit limit reached. Please check your OpenRouter account.";
+            } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+                friendlyError = "Network error. Please check your internet connection.";
+            } else if (errorMessage.includes('Failed to fetch')) {
+                friendlyError = "Cannot connect to server. Is the backend running?";
+            }
+
             setMessages((prev) => [
                 ...prev,
                 {
                     role: 'assistant',
-                    content: `❌ Oops! Something went wrong: ${errorMessage}\n\nPlease try again or check if the backend server is running.`,
+                    content: `❌ **Error:** ${friendlyError}\n\n_Try again or rephrase your request._`,
                     timestamp: new Date(),
                 },
             ]);
@@ -414,6 +454,36 @@ Please modify the above HTML according to the user's request. Keep the overall s
 
         setShowResetDialog(false);
         console.log('🔄 Chat session reset');
+    };
+
+    // Restore template to a previous version
+    const handleRestoreVersion = (checkpoint: TemplateCheckpoint) => {
+        if (!currentTemplate) return;
+
+        // Update template with checkpoint's HTML
+        const restoredTemplate: EmailTemplate = {
+            ...currentTemplate,
+            html: checkpoint.html,
+            updatedAt: new Date(),
+        };
+
+        setCurrentTemplate(restoredTemplate);
+        onGenerateTemplate(restoredTemplate);
+
+        // Add restore message to chat
+        setMessages(prev => [
+            ...prev,
+            {
+                role: 'assistant',
+                content: `🔄 **Restored to Version ${checkpoint.version}**\n\n_Original prompt: "${checkpoint.userPrompt.slice(0, 60)}${checkpoint.userPrompt.length > 60 ? '...' : ''}"_\n\nYou can continue making changes from this point.`,
+                timestamp: new Date(),
+            }
+        ]);
+
+        // Close version history panel
+        setShowVersionHistory(false);
+
+        console.log(`✅ Restored to version ${checkpoint.version}`);
     };
 
     // Generate subject line from user prompt
@@ -506,6 +576,77 @@ Please modify the above HTML according to the user's request. Keep the overall s
         'Event invitation with RSVP',
         'Product launch announcement',
     ];
+
+    // Simple markdown renderer for chat messages
+    const renderMarkdown = (text: string) => {
+        // Split by lines to handle bullet points
+        const lines = text.split('\n');
+
+        return lines.map((line, lineIndex) => {
+            // Parse inline formatting
+            let content: React.ReactNode = line;
+
+            // Bold: **text** or __text__
+            const boldParts = line.split(/(\*\*[^*]+\*\*|__[^_]+__)/g);
+            if (boldParts.length > 1) {
+                content = boldParts.map((part, i) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        return <strong key={i} style={{ fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
+                    }
+                    if (part.startsWith('__') && part.endsWith('__')) {
+                        return <strong key={i} style={{ fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
+                    }
+                    // Handle italic within remaining text: _text_ or *text*
+                    const italicParts = part.split(/(_[^_]+_|\*[^*]+\*)/g);
+                    if (italicParts.length > 1) {
+                        return italicParts.map((iPart, j) => {
+                            if ((iPart.startsWith('_') && iPart.endsWith('_')) ||
+                                (iPart.startsWith('*') && iPart.endsWith('*'))) {
+                                return <em key={`${i}-${j}`} style={{ fontStyle: 'italic', color: '#a1a1aa' }}>{iPart.slice(1, -1)}</em>;
+                            }
+                            return iPart;
+                        });
+                    }
+                    return part;
+                });
+            } else {
+                // Handle italic if no bold
+                const italicParts = line.split(/(_[^_]+_)/g);
+                if (italicParts.length > 1) {
+                    content = italicParts.map((part, i) => {
+                        if (part.startsWith('_') && part.endsWith('_')) {
+                            return <em key={i} style={{ fontStyle: 'italic', color: '#a1a1aa' }}>{part.slice(1, -1)}</em>;
+                        }
+                        return part;
+                    });
+                }
+            }
+
+            // Check if line is a bullet point
+            const bulletMatch = line.match(/^(\s*)[•\-\*]\s+(.+)/);
+            if (bulletMatch) {
+                return (
+                    <div key={lineIndex} style={{
+                        display: 'flex',
+                        gap: '8px',
+                        marginLeft: bulletMatch[1].length * 4,
+                        marginTop: '4px',
+                    }}>
+                        <span style={{ color: '#3b82f6' }}>•</span>
+                        <span>{typeof content === 'string' ? bulletMatch[2] : content}</span>
+                    </div>
+                );
+            }
+
+            // Regular line
+            return (
+                <React.Fragment key={lineIndex}>
+                    {content}
+                    {lineIndex < lines.length - 1 && <br />}
+                </React.Fragment>
+            );
+        });
+    };
 
     return (
         <div style={{
@@ -635,6 +776,30 @@ Please modify the above HTML according to the user's request. Keep the overall s
                     >
                         <Image style={{ width: '14px', height: '14px' }} />
                         Images ({uploadedImages.length})
+                    </button>
+
+                    {/* Version History Button */}
+                    <button
+                        onClick={() => setShowVersionHistory(!showVersionHistory)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            border: 'none',
+                            cursor: checkpoints.length > 0 ? 'pointer' : 'not-allowed',
+                            backgroundColor: showVersionHistory ? '#3b82f6' : 'transparent',
+                            color: showVersionHistory ? '#ffffff' : checkpoints.length > 0 ? '#a1a1aa' : '#52525b',
+                            transition: 'all 0.2s',
+                            opacity: checkpoints.length > 0 ? 1 : 0.5,
+                        }}
+                        disabled={checkpoints.length === 0}
+                    >
+                        <History style={{ width: '14px', height: '14px' }} />
+                        History ({checkpoints.length})
                     </button>
 
                     {/* Divider */}
@@ -775,6 +940,275 @@ Please modify the above HTML according to the user's request. Keep the overall s
                 </div>
             )}
 
+            {/* Restore Confirmation Dialog */}
+            {restoreConfirm && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                }}>
+                    <div style={{
+                        backgroundColor: '#18181b',
+                        border: '1px solid #27272a',
+                        borderRadius: '12px',
+                        padding: '24px',
+                        maxWidth: '400px',
+                        width: '90%',
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '16px',
+                        }}>
+                            <div style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '8px',
+                                backgroundColor: '#1e3a5f',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <RotateCcw style={{ width: '20px', height: '20px', color: '#3b82f6' }} />
+                            </div>
+                            <h3 style={{
+                                margin: 0,
+                                fontSize: '18px',
+                                fontWeight: 600,
+                                color: '#ffffff',
+                            }}>
+                                Restore to Version {restoreConfirm.version}?
+                            </h3>
+                        </div>
+
+                        <p style={{
+                            margin: '0 0 8px 0',
+                            fontSize: '14px',
+                            lineHeight: '1.6',
+                            color: '#a1a1aa',
+                        }}>
+                            This will restore your template to this point:
+                        </p>
+
+                        <div style={{
+                            backgroundColor: '#27272a',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            marginBottom: '20px',
+                        }}>
+                            <p style={{
+                                margin: 0,
+                                fontSize: '13px',
+                                color: '#e4e4e7',
+                                fontStyle: 'italic',
+                            }}>
+                                "{restoreConfirm.userPrompt.slice(0, 100)}{restoreConfirm.userPrompt.length > 100 ? '...' : ''}"
+                            </p>
+                        </div>
+
+                        <div style={{
+                            display: 'flex',
+                            gap: '12px',
+                            justifyContent: 'flex-end',
+                        }}>
+                            <button
+                                onClick={() => setRestoreConfirm(null)}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    fontWeight: 500,
+                                    border: '1px solid #3f3f46',
+                                    backgroundColor: 'transparent',
+                                    color: '#a1a1aa',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleRestoreVersion(restoreConfirm);
+                                    setRestoreConfirm(null);
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    fontSize: '14px',
+                                    fontWeight: 500,
+                                    border: 'none',
+                                    backgroundColor: '#3b82f6',
+                                    color: '#ffffff',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                            >
+                                Yes, Restore
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Version History Panel */}
+            {showVersionHistory && (
+                <div style={{
+                    position: 'absolute',
+                    top: '48px',
+                    right: '0',
+                    width: '320px',
+                    maxHeight: 'calc(100% - 48px)',
+                    backgroundColor: '#18181b',
+                    borderLeft: '1px solid #27272a',
+                    borderBottom: '1px solid #27272a',
+                    borderRadius: '0 0 0 12px',
+                    zIndex: 100,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxShadow: '-4px 4px 12px rgba(0, 0, 0, 0.4)',
+                }}>
+                    {/* Panel Header */}
+                    <div style={{
+                        padding: '16px',
+                        borderBottom: '1px solid #27272a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <History style={{ width: '16px', height: '16px', color: '#3b82f6' }} />
+                            <span style={{ fontWeight: 600, color: '#ffffff', fontSize: '14px' }}>
+                                Version History
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setShowVersionHistory(false)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#71717a',
+                                padding: '4px',
+                            }}
+                        >
+                            <X style={{ width: '16px', height: '16px' }} />
+                        </button>
+                    </div>
+
+                    {/* Checkpoints List */}
+                    <div style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        padding: '8px',
+                    }}>
+                        {checkpoints.length === 0 ? (
+                            <p style={{
+                                color: '#71717a',
+                                fontSize: '13px',
+                                textAlign: 'center',
+                                padding: '20px',
+                            }}>
+                                No versions yet. Generate a template to start tracking versions.
+                            </p>
+                        ) : (
+                            [...checkpoints]
+                                .sort((a, b) => b.version - a.version)
+                                .map((checkpoint) => (
+                                    <div
+                                        key={checkpoint.id}
+                                        style={{
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            backgroundColor: '#27272a',
+                                            marginBottom: '8px',
+                                            border: '1px solid #3f3f46',
+                                        }}
+                                    >
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            marginBottom: '6px',
+                                        }}>
+                                            <span style={{
+                                                fontSize: '13px',
+                                                fontWeight: 600,
+                                                color: '#3b82f6',
+                                            }}>
+                                                v{checkpoint.version}
+                                            </span>
+                                            <span style={{
+                                                fontSize: '11px',
+                                                color: '#71717a',
+                                            }}>
+                                                {new Date(checkpoint.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+
+                                        <p style={{
+                                            fontSize: '12px',
+                                            color: '#a1a1aa',
+                                            margin: '0 0 10px 0',
+                                            lineHeight: '1.4',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                        }}>
+                                            "{checkpoint.userPrompt}"
+                                        </p>
+
+                                        <button
+                                            onClick={() => handleRestoreVersion(checkpoint)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '6px 12px',
+                                                borderRadius: '6px',
+                                                fontSize: '12px',
+                                                fontWeight: 500,
+                                                border: '1px solid #3b82f6',
+                                                backgroundColor: 'transparent',
+                                                color: '#3b82f6',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '6px',
+                                                transition: 'all 0.2s',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#3b82f6';
+                                                e.currentTarget.style.color = '#ffffff';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                e.currentTarget.style.color = '#3b82f6';
+                                            }}
+                                        >
+                                            <RotateCcw style={{ width: '12px', height: '12px' }} />
+                                            Restore this version
+                                        </button>
+                                    </div>
+                                ))
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Main Content - Two Panel Layout */}
             <div ref={containerRef} style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
                 {/* Left Panel - Chat */}
@@ -813,10 +1247,9 @@ Please modify the above HTML according to the user's request. Keep the overall s
                                                 color: '#e4e4e7',
                                                 fontSize: '14px',
                                                 lineHeight: '1.6',
-                                                whiteSpace: 'pre-wrap',
                                                 wordBreak: 'break-word',
                                             }}>
-                                                {message.content}
+                                                {renderMarkdown(message.content)}
                                             </div>
                                             <div style={{ display: 'flex', gap: '4px', marginTop: '8px' }}>
                                                 {[RotateCcw, ThumbsUp, ThumbsDown, Copy].map((Icon, i) => (
@@ -834,7 +1267,44 @@ Please modify the above HTML according to the user's request. Keep the overall s
                                         </div>
                                     </div>
                                 ) : (
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+                                        {/* Show restore icon if this message has a checkpoint */}
+                                        {(() => {
+                                            const checkpoint = checkpoints.find(cp => cp.userPrompt === message.content);
+                                            if (checkpoint) {
+                                                return (
+                                                    <button
+                                                        onClick={() => setRestoreConfirm(checkpoint)}
+                                                        title={`Restore to v${checkpoint.version}`}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            color: '#71717a',
+                                                            padding: '6px',
+                                                            borderRadius: '6px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            fontSize: '11px',
+                                                            transition: 'all 0.2s',
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#27272a';
+                                                            e.currentTarget.style.color = '#3b82f6';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                                            e.currentTarget.style.color = '#71717a';
+                                                        }}
+                                                    >
+                                                        <RotateCcw style={{ width: '14px', height: '14px' }} />
+                                                        <span>v{checkpoint.version}</span>
+                                                    </button>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                         <div style={{
                                             maxWidth: '80%',
                                             backgroundColor: '#7c3aed',
@@ -847,7 +1317,7 @@ Please modify the above HTML according to the user's request. Keep the overall s
                                             whiteSpace: 'pre-wrap',
                                             wordBreak: 'break-word',
                                         }}>
-                                            {message.content}
+                                            {renderMarkdown(message.content)}
                                         </div>
                                     </div>
                                 )}

@@ -399,6 +399,7 @@ EMAIL_SYSTEM_PROMPT = """You are an expert HTML email template generator for pro
 
 STRICT RULES (DO NOT BREAK):
 - Output ONLY valid HTML (no markdown, no explanation, no text before or after)
+- NEVER use markdown syntax like **bold** or _italic_ - use <strong> and <em> HTML tags instead
 - Use table-based layout ONLY
 - Max email width: 600px
 - Inline CSS ONLY (style attributes on elements)
@@ -408,31 +409,43 @@ STRICT RULES (DO NOT BREAK):
 - Start output with <!DOCTYPE html> or <html>
 - End output with </html>
 
-SUBJECT LINE GENERATION (NEW):
-- BEFORE the HTML, output a subject line as an HTML comment
+RESPONSE FORMAT (CRITICAL - ALWAYS FOLLOW):
+Your response must have exactly this structure:
+1. SUBJECT comment: <!-- SUBJECT: Your Subject Line -->
+2. CHANGES comment (for modifications): <!-- CHANGES: • Change 1 • Change 2 -->
+3. The full HTML code
+
+SUBJECT LINE:
 - Format: <!-- SUBJECT: Your Generated Subject Line -->
-- Subject should be SHORT (max 60 chars), IMPACTFUL, and relevant to the email content
-- Use emojis when appropriate (🎉 for welcome, 🔥 for sales, 📅 for events)
+- SHORT (max 60 chars), IMPACTFUL, relevant
+- Use emojis: 🎉 welcome, 🔥 sales, 📅 events
 - Example: <!-- SUBJECT: 🔥 IPL Match: Mumbai vs Pune - Book Now! -->
 
+CHANGE SUMMARY (FOR MODIFICATIONS):
+- When modifying existing HTML, output a CHANGES comment BEFORE the HTML
+- Format: <!-- CHANGES: • First change made • Second change made • Third change made -->
+- Be SPECIFIC: "Changed button color from #3B82F6 to #EF4444" not just "Changed button"
+- List ALL changes you made
+- If creating NEW template, skip the CHANGES comment
+
 IMAGE RULES (CRITICAL):
-- If user provides actual URLs (starting with http:// or https://), USE THEM DIRECTLY in <img src="">
-- Look for URL patterns like @https:// or just https:// in the user's prompt
-- DO NOT use source.unsplash.com - it is deprecated and broken
+- If user provides actual URLs (http:// or https://), USE THEM DIRECTLY in <img src="">
+- DO NOT use source.unsplash.com - it is deprecated
 - DO NOT use Wikipedia/Wikimedia URLs - they block hotlinking
 - DO NOT invent random image URLs
-- If no URL is provided, use PLACEHOLDER format: {{IMAGE_HERO}}, {{IMAGE_1}}, etc.
+- If no URL provided, use PLACEHOLDER: {{IMAGE_HERO}}, {{IMAGE_1}}, etc.
 
 IMAGE IMPLEMENTATION:
-- All images must have: width="600" style="display:block;max-width:100%;height:auto;"
-- For logos/small images: use appropriate width like width="150" or width="200"
-- Wrap images in <td align="center">
-- Always include descriptive alt text for accessibility
+- All images: width="600" style="display:block;max-width:100%;height:auto;"
+- Logos/small: width="150" or width="200"
+- Wrap in <td align="center">
+- Always include descriptive alt text
 
 MODIFICATION REQUESTS:
-- If the user says "fix", "change", "update", "modify", "where is", "I cannot see", etc. AND provides existing HTML context, MODIFY the existing template
-- Keep the overall structure but apply the requested changes
-- If a specific image is not showing, check the URL and ensure it's correctly placed in an <img src=""> tag
+- When user says "fix", "change", "update", "modify", etc. - MODIFY the existing template
+- Use CONVERSATION HISTORY to understand context
+- Keep overall structure, apply targeted changes
+- Reference the CURRENT HTML provided to make precise edits
 
 VISUAL ENHANCEMENTS:
 - Use Unicode emojis (🎉 🔥 ⭐ 🚀 ✨ 💡) for visual interest
@@ -440,7 +453,14 @@ VISUAL ENHANCEMENTS:
 - Use bold typography for headers
 - Create visually appealing layouts with good spacing
 
-Failure to follow these rules is an error. Output the subject comment FIRST, then the HTML code."""
+CRITICAL OUTPUT RULES:
+1. Output ONLY: SUBJECT comment → CHANGES comment (if modifying) → HTML code
+2. STOP IMMEDIATELY after </html> tag
+3. NO explanations, NO suggestions, NO "Key Changes", NO "Further Considerations"
+4. NO text whatsoever after the closing </html> tag
+5. ALWAYS generate a proper SUBJECT line comment at the very start
+
+If user asks a question like "what can I do to enhance", provide suggestions AS HTML COMMENTS inside the template, not as text after it."""
 
 
 def img_to_base64(file: UploadFile) -> str:
@@ -453,11 +473,13 @@ def img_to_base64(file: UploadFile) -> str:
 @app.post("/generate-email")
 async def generate_email(
     prompt: str = Form(..., description="Email intent/description"),
+    history: Optional[str] = Form(None, description="JSON array of conversation history"),
+    current_html: Optional[str] = Form(None, description="Current template HTML for modifications"),
     images: List[UploadFile] = File(default=[])
 ):
     """
-    Generate email-safe HTML using Claude 3.5 Haiku via OpenRouter.
-    Supports up to 4 images for design reference.
+    Generate email-safe HTML using AI via OpenRouter.
+    Supports conversation history for context-aware modifications.
     """
     
     # Check if OpenRouter is configured
@@ -471,48 +493,85 @@ async def generate_email(
     if len(images) > 4:
         raise HTTPException(400, "Maximum 4 images allowed")
     
-    # Build message content
-    content = [{"type": "text", "text": prompt}]
+    # Build messages list starting with system prompt
+    messages = [
+        {
+            "role": "system",
+            "content": EMAIL_SYSTEM_PROMPT
+        }
+    ]
+    
+    # Parse and add conversation history if provided
+    if history:
+        try:
+            import json
+            history_messages = json.loads(history)
+            for msg in history_messages:
+                # Only include text content from history (no images)
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role in ["user", "assistant"] and content:
+                    messages.append({
+                        "role": role,
+                        "content": content
+                    })
+        except json.JSONDecodeError:
+            print("Warning: Failed to parse history JSON, proceeding without history")
+    
+    # Build current message content
+    current_content = []
+    
+    # If current HTML is provided, include it for modification context
+    if current_html:
+        current_content.append({
+            "type": "text", 
+            "text": f"CURRENT TEMPLATE HTML:\n```html\n{current_html}\n```\n\nUSER REQUEST: {prompt}"
+        })
+    else:
+        current_content.append({"type": "text", "text": prompt})
     
     # Add images to content if provided
     for img in images:
-        if img.filename:  # Check if file was actually uploaded
+        if img.filename:
             content_type = img.content_type or "image/png"
             base64_data = img_to_base64(img)
-            content.append({
+            current_content.append({
                 "type": "image_url",
                 "image_url": {
                     "url": f"data:{content_type};base64,{base64_data}"
                 }
             })
     
+    # Add current user message
+    messages.append({
+        "role": "user",
+        "content": current_content if len(current_content) > 1 else current_content[0]["text"]
+    })
+    
     try:
-        # Call Claude 3.5 Haiku via OpenRouter
+        # Call AI via OpenRouter
         response = openrouter_client.chat.completions.create(
-            model="google/gemma-3-27b-it:free",  # Google Gemma 3 27B - FREE!
-            messages=[
-                {
-                    "role": "system",
-                    "content": EMAIL_SYSTEM_PROMPT
-                },
-                {
-                    "role": "user",
-                    "content": content
-                }
-            ],
+            model="google/gemma-3-27b-it:free",
+            messages=messages,
             temperature=0.3,
-            max_tokens=4000  # Increased for modification requests with existing HTML
+            max_tokens=4000
         )
         
         html_content = response.choices[0].message.content
         
-        # Extract subject line from HTML comment (if present)
+        # Extract subject line from HTML comment
         subject_line = None
         subject_match = re.search(r'<!--\s*SUBJECT:\s*(.+?)\s*-->', html_content, re.IGNORECASE)
         if subject_match:
             subject_line = subject_match.group(1).strip()
-            # Remove the subject comment from HTML
             html_content = re.sub(r'<!--\s*SUBJECT:.+?-->\s*', '', html_content, flags=re.IGNORECASE)
+        
+        # Extract change summary from HTML comment
+        changes_summary = None
+        changes_match = re.search(r'<!--\s*CHANGES:\s*(.+?)\s*-->', html_content, re.IGNORECASE | re.DOTALL)
+        if changes_match:
+            changes_summary = changes_match.group(1).strip()
+            html_content = re.sub(r'<!--\s*CHANGES:.+?-->\s*', '', html_content, flags=re.IGNORECASE | re.DOTALL)
         
         # Clean up the HTML (remove markdown code blocks if present)
         if html_content.startswith("```html"):
@@ -526,9 +585,7 @@ async def generate_email(
         # Validate that output is actually HTML
         html_lower = html_content.lower()
         if not ("<html" in html_lower or "<!doctype" in html_lower or "<table" in html_lower):
-            # If AI didn't return HTML, try to extract it
             if "<table" in html_lower:
-                # Find the table-based content
                 start_idx = html_content.lower().find("<table")
                 end_idx = html_content.lower().rfind("</table>") + 8
                 if start_idx != -1 and end_idx > start_idx:
@@ -544,8 +601,24 @@ async def generate_email(
             idx = html_lower.find("<html")
             html_content = html_content[idx:]
         
-        # Make all links open in new tab by adding target="_blank" and rel="noopener noreferrer"
-        # Replace <a> tags that don't have target attribute
+        # CRITICAL: Remove any text AFTER </html> (AI explanations, suggestions, etc.)
+        html_lower = html_content.lower()
+        if "</html>" in html_lower:
+            idx = html_lower.find("</html>") + 7
+            html_content = html_content[:idx]
+        elif "</body>" in html_lower:
+            idx = html_lower.find("</body>") + 7
+            html_content = html_content[:idx]
+        elif "</table>" in html_lower:
+            # Find the LAST closing table tag (in case of nested tables)
+            idx = html_lower.rfind("</table>") + 8
+            html_content = html_content[:idx]
+        
+        # Remove markdown code block markers that might be in the middle
+        html_content = html_content.replace("```html", "").replace("```", "")
+        html_content = html_content.strip()
+        
+        # Make all links open in new tab
         html_content = re.sub(
             r'<a\s+([^>]*?)href=',
             lambda m: '<a ' + m.group(1) + 'target="_blank" rel="noopener noreferrer" href=' 
@@ -557,8 +630,9 @@ async def generate_email(
         return {
             "success": True,
             "html": html_content,
-            "subject": subject_line,  # NEW: Return extracted subject
-            "model": "anthropic/claude-3.5-haiku",
+            "subject": subject_line,
+            "changes": changes_summary,  # NEW: Return change summary
+            "model": "google/gemma-3-27b-it:free",
             "images_used": len([img for img in images if img.filename])
         }
         
