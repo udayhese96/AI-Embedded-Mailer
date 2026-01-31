@@ -24,6 +24,7 @@ import {
     Link,
     RefreshCw,
     History,
+    Paperclip,
 } from 'lucide-react';
 import { EmailTemplate, GmailConnection, Message, ChatSession, TemplateCheckpoint } from '../types/template';
 import { saveChatSession, loadChatSession, clearChatSession, saveCheckpoint } from '../utils/chatStorage';
@@ -80,6 +81,10 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const referenceImageInputRef = useRef<HTMLInputElement>(null);
+
+    // Reference Images State (for attaching visual references to prompts)
+    const [referenceImages, setReferenceImages] = useState<File[]>([]);
 
     // Image Gallery State
     const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -281,10 +286,19 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
         if (!input.trim() || isGenerating) return;
 
         const userMessage = input.trim();
+        const imagesToSend = [...referenceImages]; // Capture before clearing
         setInput('');
+        setReferenceImages([]); // Clear attached images
 
-        // Add user message first
-        const newUserMessage: Message = { role: 'user', content: userMessage, timestamp: new Date() };
+        // Add user message first (with image count indicator)
+        const imageIndicator = imagesToSend.length > 0
+            ? ` [📎 ${imagesToSend.length} image${imagesToSend.length > 1 ? 's' : ''} attached]`
+            : '';
+        const newUserMessage: Message = {
+            role: 'user',
+            content: userMessage + imageIndicator,
+            timestamp: new Date()
+        };
         setMessages((prev) => [...prev, newUserMessage]);
         setIsGenerating(true);
 
@@ -293,6 +307,11 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
 
             // Always send the user's prompt
             formData.append('prompt', userMessage);
+
+            // Attach reference images for multimodal processing
+            imagesToSend.forEach((img) => {
+                formData.append('images', img);
+            });
 
             // Send full conversation history (excluding the greeting and current message)
             const historyToSend = messages
@@ -429,6 +448,32 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+        }
+    };
+
+    // Handle Ctrl+V paste for images
+    const handlePaste = (e: React.ClipboardEvent) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        const imageFiles: File[] = [];
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.type.startsWith('image/')) {
+                const file = item.getAsFile();
+                if (file) {
+                    imageFiles.push(file);
+                }
+            }
+        }
+
+        if (imageFiles.length > 0) {
+            e.preventDefault(); // Prevent default paste behavior for images
+            // Add pasted images (limit to 4 total)
+            const newImages = imageFiles.slice(0, 4 - referenceImages.length);
+            if (newImages.length > 0) {
+                setReferenceImages(prev => [...prev, ...newImages].slice(0, 4));
+            }
         }
     };
 
@@ -576,6 +621,25 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
         'Event invitation with RSVP',
         'Product launch announcement',
     ];
+
+    // Handle reference image selection (for multimodal AI)
+    const handleReferenceImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        // Limit to 4 images max
+        const newImages = files.slice(0, 4 - referenceImages.length);
+        setReferenceImages(prev => [...prev, ...newImages].slice(0, 4));
+
+        // Reset input for re-selection
+        if (referenceImageInputRef.current) {
+            referenceImageInputRef.current.value = '';
+        }
+    };
+
+    const handleRemoveReferenceImage = (index: number) => {
+        setReferenceImages(prev => prev.filter((_, i) => i !== index));
+    };
 
     // Simple markdown renderer for chat messages
     const renderMarkdown = (text: string) => {
@@ -1365,23 +1429,130 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
                         borderTop: '1px solid #27272a',
                         backgroundColor: '#0a0a0b',
                     }}>
+                        {/* Hidden file input for reference images */}
+                        <input
+                            ref={referenceImageInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleReferenceImageSelect}
+                            style={{ display: 'none' }}
+                        />
+
+                        {/* Reference Image Thumbnails */}
+                        {referenceImages.length > 0 && (
+                            <div style={{
+                                display: 'flex',
+                                gap: '8px',
+                                marginBottom: '12px',
+                                flexWrap: 'wrap',
+                            }}>
+                                {referenceImages.map((img, index) => (
+                                    <div
+                                        key={index}
+                                        style={{
+                                            position: 'relative',
+                                            width: '60px',
+                                            height: '60px',
+                                            borderRadius: '8px',
+                                            overflow: 'hidden',
+                                            border: '2px solid #3f3f46',
+                                        }}
+                                    >
+                                        <img
+                                            src={URL.createObjectURL(img)}
+                                            alt={`Reference ${index + 1}`}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => handleRemoveReferenceImage(index)}
+                                            style={{
+                                                position: 'absolute',
+                                                top: '2px',
+                                                right: '2px',
+                                                width: '18px',
+                                                height: '18px',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#ef4444',
+                                                border: 'none',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            <X style={{ width: '12px', height: '12px', color: '#fff' }} />
+                                        </button>
+                                    </div>
+                                ))}
+                                <span style={{
+                                    fontSize: '11px',
+                                    color: '#71717a',
+                                    alignSelf: 'center',
+                                    marginLeft: '4px',
+                                }}>
+                                    {referenceImages.length}/4 images
+                                </span>
+                            </div>
+                        )}
+
                         <div style={{
                             display: 'flex',
                             alignItems: 'flex-end',
-                            gap: '12px',
+                            gap: '8px',
                             backgroundColor: '#18181b',
                             border: '1px solid #3f3f46',
                             borderRadius: '12px',
                             padding: '12px 16px',
                         }}>
+                            {/* Attach Image Button */}
+                            <button
+                                onClick={() => referenceImageInputRef.current?.click()}
+                                disabled={isGenerating || referenceImages.length >= 4}
+                                title="Attach reference image"
+                                style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '8px',
+                                    backgroundColor: 'transparent',
+                                    border: '1px solid #3f3f46',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: referenceImages.length >= 4 ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.2s',
+                                    flexShrink: 0,
+                                    opacity: referenceImages.length >= 4 ? 0.4 : 1,
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (referenceImages.length < 4) {
+                                        e.currentTarget.style.backgroundColor = '#27272a';
+                                        e.currentTarget.style.borderColor = '#7c3aed';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.borderColor = '#3f3f46';
+                                }}
+                            >
+                                <Paperclip style={{ width: '16px', height: '16px', color: '#a1a1aa' }} />
+                            </button>
+
                             <textarea
                                 ref={inputRef}
                                 value={input}
                                 onChange={handleInputChange}
                                 onKeyDown={handleKeyDown}
+                                onPaste={handlePaste}
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
-                                placeholder="Describe your email template..."
+                                placeholder={referenceImages.length > 0
+                                    ? "Describe the changes you want based on the attached image(s)..."
+                                    : "Describe your email template..."}
                                 rows={1}
                                 className="ai-chat-scrollbar"
                                 style={{
@@ -1430,7 +1601,7 @@ export function AIGeneratorV2({ onGenerateTemplate, onBack, gmailConnection }: A
                             marginTop: '8px',
                         }}>
                             <span style={{ fontSize: '11px', color: '#52525b' }}>
-                                Powered by Claude 3.5 Haiku
+                                Powered by GPT-4o-mini • Attach images for visual reference
                             </span>
                         </div>
                     </div>

@@ -22,7 +22,7 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 FERNET_KEY = os.getenv("FERNET_KEY")
 SESSION_SECRET = os.getenv("SESSION_SECRET")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Supabase Configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -34,18 +34,17 @@ if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, FERNET_KEY])
 
 fernet = Fernet(FERNET_KEY.encode())
 
-# Initialize OpenRouter client (for AI email generation)
-openrouter_client = None
-if OPENROUTER_API_KEY:
+# Initialize OpenAI client (for AI email generation)
+openai_client = None
+if OPENAI_API_KEY:
     # Show first/last 4 chars for debugging (hide the rest)
-    key_preview = f"{OPENROUTER_API_KEY[:12]}...{OPENROUTER_API_KEY[-4:]}" if len(OPENROUTER_API_KEY) > 16 else "KEY_TOO_SHORT"
-    print(f"🔑 OpenRouter API Key loaded: {key_preview}")
-    openrouter_client = OpenAI(
-        api_key=OPENROUTER_API_KEY,
-        base_url="https://openrouter.ai/api/v1"
+    key_preview = f"{OPENAI_API_KEY[:12]}...{OPENAI_API_KEY[-4:]}" if len(OPENAI_API_KEY) > 16 else "KEY_TOO_SHORT"
+    print(f"🔑 OpenAI API Key loaded: {key_preview}")
+    openai_client = OpenAI(
+        api_key=OPENAI_API_KEY
     )
 else:
-    print("❌ OPENROUTER_API_KEY not found in .env file!")
+    print("❌ OPENAI_API_KEY not found in .env file!")
 
 # Initialize Supabase client (for image storage)
 supabase: Client = None
@@ -391,7 +390,7 @@ async def delete_image(filename: str):
 
 
 # ==================================================================
-# 7️⃣ AI EMAIL GENERATION (Claude 3.5 Haiku via OpenRouter)
+# 7️⃣ AI EMAIL GENERATION (GPT-4o-mini via OpenAI)
 # ==================================================================
 
 # System prompt for email HTML generation (STRICT - HTML ONLY)
@@ -406,26 +405,38 @@ STRICT RULES (DO NOT BREAK):
 - No <style> tags, no <script>, no external CSS
 - Gmail, Outlook, Yahoo compatible
 - Mobile & desktop responsive
-- Start output with <!DOCTYPE html> or <html>
+- Start output with <!-- SUBJECT: ... --> then the HTML
 - End output with </html>
 
-RESPONSE FORMAT (CRITICAL - ALWAYS FOLLOW):
-Your response must have exactly this structure:
-1. SUBJECT comment: <!-- SUBJECT: Your Subject Line -->
-2. CHANGES comment (for modifications): <!-- CHANGES: • Change 1 • Change 2 -->
-3. The full HTML code
+RESPONSE FORMAT (MANDATORY - ALWAYS FOLLOW):
+Your response MUST start with a SUBJECT line comment. This is REQUIRED for every response.
+Format: <!-- SUBJECT: Your Short Catchy Subject Line Here -->
 
-SUBJECT LINE:
-- Format: <!-- SUBJECT: Your Generated Subject Line -->
-- SHORT (max 60 chars), IMPACTFUL, relevant
-- Use emojis: 🎉 welcome, 🔥 sales, 📅 events
-- Example: <!-- SUBJECT: 🔥 IPL Match: Mumbai vs Pune - Book Now! -->
+Example complete response structure:
+<!-- SUBJECT: 🎉 Welcome to Our Community! -->
+<!DOCTYPE html>
+<html>...</html>
 
-CHANGE SUMMARY (FOR MODIFICATIONS):
-- When modifying existing HTML, output a CHANGES comment BEFORE the HTML
-- Format: <!-- CHANGES: • First change made • Second change made • Third change made -->
-- Be SPECIFIC: "Changed button color from #3B82F6 to #EF4444" not just "Changed button"
-- List ALL changes you made
+SUBJECT LINE RULES (VERY IMPORTANT):
+- ALWAYS start your response with: <!-- SUBJECT: ... -->
+- Create a SHORT, catchy subject line (max 50 characters)
+- DO NOT repeat the user's prompt as the subject
+- Make it like a real email subject: action-oriented, intriguing, emotional
+- Use 1 relevant emoji at the start
+- Examples of GOOD subject lines:
+  • <!-- SUBJECT: 🔥 50% Off - Today Only! -->
+  • <!-- SUBJECT: 🎉 You're Invited: Exclusive Event -->
+  • <!-- SUBJECT: 📅 IPL Match Day - Book Your Seats! -->
+  • <!-- SUBJECT: ✨ Your Order is Confirmed! -->
+  • <!-- SUBJECT: 🚀 Launch Alert: New Feature Inside -->
+- Examples of BAD subject lines (DO NOT DO THIS):
+  • "Template for IPL Match" (too generic)
+  • "Email about cricket" (boring)
+  • Just repeating user's request
+
+CHANGE SUMMARY (FOR MODIFICATIONS ONLY):
+- When modifying existing HTML, output a CHANGES comment AFTER the SUBJECT comment
+- Format: <!-- CHANGES: • First change made • Second change made -->
 - If creating NEW template, skip the CHANGES comment
 
 IMAGE RULES (CRITICAL):
@@ -435,18 +446,6 @@ IMAGE RULES (CRITICAL):
 - DO NOT invent random image URLs
 - If no URL provided, use PLACEHOLDER: {{IMAGE_HERO}}, {{IMAGE_1}}, etc.
 
-IMAGE IMPLEMENTATION:
-- All images: width="600" style="display:block;max-width:100%;height:auto;"
-- Logos/small: width="150" or width="200"
-- Wrap in <td align="center">
-- Always include descriptive alt text
-
-MODIFICATION REQUESTS:
-- When user says "fix", "change", "update", "modify", etc. - MODIFY the existing template
-- Use CONVERSATION HISTORY to understand context
-- Keep overall structure, apply targeted changes
-- Reference the CURRENT HTML provided to make precise edits
-
 VISUAL ENHANCEMENTS:
 - Use Unicode emojis (🎉 🔥 ⭐ 🚀 ✨ 💡) for visual interest
 - Use colored backgrounds for sections
@@ -454,13 +453,10 @@ VISUAL ENHANCEMENTS:
 - Create visually appealing layouts with good spacing
 
 CRITICAL OUTPUT RULES:
-1. Output ONLY: SUBJECT comment → CHANGES comment (if modifying) → HTML code
-2. STOP IMMEDIATELY after </html> tag
-3. NO explanations, NO suggestions, NO "Key Changes", NO "Further Considerations"
-4. NO text whatsoever after the closing </html> tag
-5. ALWAYS generate a proper SUBJECT line comment at the very start
-
-If user asks a question like "what can I do to enhance", provide suggestions AS HTML COMMENTS inside the template, not as text after it."""
+1. ALWAYS start with <!-- SUBJECT: Your Subject --> - THIS IS MANDATORY
+2. Then HTML code starting with <!DOCTYPE html> or <html>
+3. STOP IMMEDIATELY after </html> tag
+4. NO explanations, NO suggestions after </html>"""
 
 
 def img_to_base64(file: UploadFile) -> str:
@@ -478,15 +474,15 @@ async def generate_email(
     images: List[UploadFile] = File(default=[])
 ):
     """
-    Generate email-safe HTML using AI via OpenRouter.
+    Generate email-safe HTML using AI via OpenAI.
     Supports conversation history for context-aware modifications.
     """
     
-    # Check if OpenRouter is configured
-    if not openrouter_client:
+    # Check if OpenAI is configured
+    if not openai_client:
         raise HTTPException(
             500, 
-            "OpenRouter API key not configured. Please add OPENROUTER_API_KEY to your .env file."
+            "OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file."
         )
     
     # Validate image count
@@ -549,9 +545,10 @@ async def generate_email(
     })
     
     try:
-        # Call AI via OpenRouter
-        response = openrouter_client.chat.completions.create(
-            model="google/gemma-3-27b-it:free",
+        # Call AI via OpenAI
+        # Using GPT-4o-mini (cost-effective and suitable for email generation)
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
             messages=messages,
             temperature=0.3,
             max_tokens=4000
@@ -565,6 +562,32 @@ async def generate_email(
         if subject_match:
             subject_line = subject_match.group(1).strip()
             html_content = re.sub(r'<!--\s*SUBJECT:.+?-->\s*', '', html_content, flags=re.IGNORECASE)
+        
+        # Fallback: Generate a subject if AI didn't provide one
+        if not subject_line:
+            try:
+                subject_response = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "Generate a short, catchy email subject line (max 50 chars) for the given email description. Start with 1 emoji. Output ONLY the subject line, nothing else."
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Email description: {prompt}"
+                        }
+                    ],
+                    temperature=0.7,
+                    max_tokens=60
+                )
+                subject_line = subject_response.choices[0].message.content.strip()
+                # Clean up any quotes around it
+                subject_line = subject_line.strip('"\'')
+            except Exception as e:
+                print(f"Subject generation fallback failed: {e}")
+                # Last resort fallback
+                subject_line = None
         
         # Extract change summary from HTML comment
         changes_summary = None
@@ -632,12 +655,12 @@ async def generate_email(
             "html": html_content,
             "subject": subject_line,
             "changes": changes_summary,  # NEW: Return change summary
-            "model": "google/gemma-3-27b-it:free",
+            "model": "gpt-4o-mini",
             "images_used": len([img for img in images if img.filename])
         }
         
     except Exception as e:
-        print(f"OpenRouter API Error: {str(e)}")
+        print(f"OpenAI API Error: {str(e)}")
         raise HTTPException(500, f"Failed to generate email: {str(e)}")
 
 
