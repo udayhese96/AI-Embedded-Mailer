@@ -7,5 +7,6 @@ cryptography
 starlette
 itsdangerous
 python-multipart
+email-validator
 openai
 supabase
