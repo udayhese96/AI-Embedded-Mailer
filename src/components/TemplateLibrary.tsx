@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EmailTemplate } from '../types/template';
-import { Eye, Edit, Copy, Trash2, Plus } from 'lucide-react';
+import { Eye, Edit } from 'lucide-react';
 
 interface TemplateLibraryProps {
   templates: EmailTemplate[];
@@ -123,37 +123,13 @@ export function TemplateLibrary({
                   <Edit className="w-4 h-4" />
                   <span className="text-sm">Use</span>
                 </button>
-                <button
-                  onClick={() => onDuplicateTemplate(template)}
-                  className="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  title="Duplicate"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
-                {template.isCustom && (
-                  <button
-                    onClick={() => onDeleteTemplate(template.id)}
-                    className="flex items-center justify-center px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+
               </div>
             </div>
           </div>
         ))}
 
-        {/* Create New Template Card */}
-        <div className="bg-white rounded-xl shadow-sm border-2 border-dashed border-gray-300 overflow-hidden hover:border-purple-500 hover:bg-purple-50 transition-all cursor-pointer">
-          <div className="flex flex-col items-center justify-center h-full p-8">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-              <Plus className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-gray-900 mb-2">Create New Template</h3>
-            <p className="text-sm text-gray-500 text-center">Start from scratch or use AI</p>
-          </div>
-        </div>
+
       </div>
 
       {/* Preview Modal */}
