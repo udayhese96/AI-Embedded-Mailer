@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from .embeddings import generate_embedding, get_openai_client
 from .rag_service import get_supabase_client, get_rag_context
 from .email_generator import generate_email_html
+from .prompt_enhancer import enhance_user_prompt
 from schema.email import EmailGenerationResponse
 from schema.template import TemplateListResponse
 
@@ -67,13 +68,20 @@ async def generate_email_rag(
     if len(images) > 4:
         raise HTTPException(400, "Maximum 4 images allowed")
     
+    
+    # ENHANCE PROMPT: Rewrite user prompt for better search and generation
+    enhanced_prompt = prompt
+    if not current_html: # Only enhance for new generation, not edits
+        enhanced_prompt = await enhance_user_prompt(prompt)
+
     # Get RAG context if enabled
     rag_context = ""
     if use_rag and not current_html:  # Don't use RAG when modifying existing template
-        rag_context = await get_rag_context(prompt)
+        # Use ENHANCED prompt for RAG search (better keywords = better results)
+        rag_context = await get_rag_context(enhanced_prompt)
     
     result = await generate_email_html(
-        prompt=prompt,
+        prompt=enhanced_prompt, # Use ENHANCED prompt for generation
         history=history,
         current_html=current_html,
         images=images,
@@ -91,7 +99,10 @@ async def generate_email_rag(
 async def save_template(
     subject: str = Form(..., description="Email subject line"),
     description: str = Form(..., description="Template description"),
-    template_code: str = Form(..., description="HTML template code")
+    template_code: str = Form(..., description="HTML template code"),
+    category: str = Form("general", description="Template category"),
+    visibility: str = Form("public", description="Template visibility (public/private)")
+    
 ):
     """
     Save an email template with auto-generated embedding for RAG search.
@@ -110,6 +121,8 @@ async def save_template(
             "subject": subject,
             "description": description,
             "template_code": template_code,
+            "category": category,
+            "visibility": visibility,
             "embedding": embedding
         }).execute()
         
@@ -189,7 +202,7 @@ async def list_templates(limit: int = 50):
     
     try:
         result = supabase.table("email_templates").select(
-            "id, subject, description, created_at"
+            "id, subject, description, template_code, category, visibility, created_at"
         ).order("created_at", desc=True).limit(limit).execute()
         
         templates = result.data if result.data else []

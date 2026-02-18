@@ -5,16 +5,42 @@ Handles session storage, token encryption, and refresh operations.
 
 import uuid
 import httpx
+import json
+import os
 from typing import Dict, Optional
 from fastapi import HTTPException
 
 from .oauth_config import fernet, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
+# File to store sessions
+SESSIONS_FILE = "sessions.json"
+
 # In-memory session storage
 # Key: session_id -> Value: { "email": str, "token": encrypted_str }
-# TODO: Replace with database in production
 USER_SESSIONS: Dict[str, Dict[str, str]] = {}
 
+def load_sessions():
+    """Load sessions from JSON file."""
+    global USER_SESSIONS
+    if os.path.exists(SESSIONS_FILE):
+        try:
+            with open(SESSIONS_FILE, "r") as f:
+                USER_SESSIONS = json.load(f)
+            print(f"✅ Loaded {len(USER_SESSIONS)} sessions from disk")
+        except Exception as e:
+            print(f"⚠️ Failed to load sessions: {e}")
+            USER_SESSIONS = {}
+
+def save_sessions():
+    """Save sessions to JSON file."""
+    try:
+        with open(SESSIONS_FILE, "w") as f:
+            json.dump(USER_SESSIONS, f, indent=2)
+    except Exception as e:
+        print(f"⚠️ Failed to save sessions: {e}")
+
+# Load sessions on startup
+load_sessions()
 
 def create_session(email: str, refresh_token: Optional[str] = None) -> str:
     """
@@ -39,6 +65,8 @@ def create_session(email: str, refresh_token: Optional[str] = None) -> str:
         "email": email,
         "token": encrypted_token
     }
+    
+    save_sessions() # Persist to disk
     
     print(f"✅ Created session {session_id} for {email}")
     return session_id
@@ -69,6 +97,7 @@ def delete_session(session_id: str) -> bool:
     """
     if session_id in USER_SESSIONS:
         del USER_SESSIONS[session_id]
+        save_sessions() # Persist to disk
         print(f"🗑️ Deleted session {session_id}")
         return True
     return False

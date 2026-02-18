@@ -12,13 +12,17 @@ class TemplateSaveRequest(BaseModel):
     subject: str = Field(..., description="Email subject line")
     description: str = Field(..., description="Template description")
     template_code: str = Field(..., description="HTML template code")
+    category: str = Field("general", description="Template category")
+    visibility: str = Field("public", description="Template visibility (public/private)")
     
     class Config:
         json_schema_extra = {
             "example": {
                 "subject": "🎉 Welcome Email",
                 "description": "Welcome email for new users with company introduction",
-                "template_code": "<html>...</html>"
+                "template_code": "<html>...</html>",
+                "category": "onboarding",
+                "visibility": "public"
             }
         }
 
@@ -46,6 +50,8 @@ class TemplateResponse(BaseModel):
     description: str
     template_code: Optional[str] = None
     created_at: Optional[datetime] = None
+    category: str = "general"
+    visibility: str = "public"
     similarity: Optional[float] = Field(None, description="Similarity score (for search results)")
     
     class Config:
@@ -55,6 +61,8 @@ class TemplateResponse(BaseModel):
                 "subject": "🎉 Welcome Email",
                 "description": "Welcome email for new users",
                 "created_at": "2024-02-17T11:00:00Z",
+                "category": "onboarding",
+                "visibility": "public",
                 "similarity": 0.85
             }
         }

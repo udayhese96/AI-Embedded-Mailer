@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { GmailConnection } from '../types/template';
-import { Mail, CheckCircle, AlertCircle, Link2, Settings, ArrowLeft, Info } from 'lucide-react';
+import { Mail, CheckCircle, AlertCircle, Link2, Settings, ArrowLeft, Info, Plus } from 'lucide-react';
 import { API_URL } from '../config/api';
+import { AddTemplateForm } from './AddTemplateForm';
 
 interface GmailIntegrationProps {
   connection: GmailConnection;
@@ -12,6 +13,7 @@ interface GmailIntegrationProps {
 
 export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }: GmailIntegrationProps) {
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
 
   const handleConnect = () => {
     // Redirect to Backend OAuth endpoint
@@ -30,8 +32,8 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
           Back
         </button>
         <div>
-          <h1 className="text-gray-900">Gmail Integration</h1>
-          <p className="text-sm text-gray-500">Connect your Gmail account to send emails</p>
+          <h1 className="text-gray-900">Gmail Integration & Settings</h1>
+          <p className="text-sm text-gray-500">Manage connections and templates</p>
         </div>
       </div>
 
@@ -54,6 +56,33 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
           </div>
         </div>
       </div>
+
+      {/* Template Management Section */}
+      {showTemplateForm ? (
+        <AddTemplateForm
+          onCancel={() => setShowTemplateForm(false)}
+          onSuccess={() => setShowTemplateForm(false)}
+        />
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-row items-center justify-between">
+          <div>
+            <h3 className="text-gray-900 mb-1 flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Template Management
+            </h3>
+            <p className="text-sm text-gray-500">
+              Add new email templates to the system database
+            </p>
+          </div>
+          <button
+            onClick={() => setShowTemplateForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add New Template
+          </button>
+        </div>
+      )}
 
       {/* Connection Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

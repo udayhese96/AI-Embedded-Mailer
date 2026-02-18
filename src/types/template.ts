@@ -1,13 +1,15 @@
 export interface EmailTemplate {
   id: string;
-  name: string;
-  category: 'welcome' | 'newsletter' | 'promotional' | 'follow-up' | 'custom';
+  name: string; // specialized/mapped from subject or separate field? Backend has subject. Let's map subject->name for now or add subject to this interface
+  category: string;
   subject: string;
-  html: string;
+  description?: string;
+  html: string; // mapped from template_code
   thumbnail?: string;
   createdAt: Date;
-  updatedAt: Date;
-  isCustom: boolean;
+  updatedAt?: Date;
+  isCustom?: boolean; // kept for compatibility, default true for DB templates
+  visibility?: 'public' | 'private';
 }
 
 export interface EmailDraft {

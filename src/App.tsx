@@ -41,6 +41,50 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Fetch templates from backend on load
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const response = await fetch(`${API_URL}/list-templates?limit=100`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.templates) {
+            // Map backend format to frontend properties
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mappedTemplates: EmailTemplate[] = data.templates.map((t: any) => ({
+              id: t.id,
+              name: t.subject, // Use subject as name
+              subject: t.subject,
+              description: t.description,
+              html: t.template_code || "<html><body><p>No content</p></body></html>",
+              category: t.category || "general",
+              createdAt: new Date(t.created_at),
+              isCustom: true, // All DB templates are considered custom/editable
+              visibility: t.visibility
+            }));
+
+            // Allow preloaded templates to exist if DB is empty, or merge?
+            // For now, let's append DB templates to preloaded ones or Replace?
+            // User asked to "show all available templates", typically implies DB ones.
+            // Let's use DB templates + preloaded for now to ensure we have content.
+            // Or better: If DB has templates, use them. If not, use preloaded.
+
+            if (mappedTemplates.length > 0) {
+              // Combine with preloaded but avoid duplicates if IDs match (unlikely)
+              setTemplates([...preloadedTemplates, ...mappedTemplates]);
+            } else {
+              setTemplates(preloadedTemplates);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch templates", e);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
   // Update stats when templates change
   useEffect(() => {
     const customCount = templates.filter(t => t.isCustom).length;

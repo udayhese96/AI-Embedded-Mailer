@@ -5,11 +5,12 @@ Authentication routes for Google OAuth and email sending.
 import base64
 import httpx
 from typing import Optional
-from fastapi import APIRouter, Request, HTTPException, Form
+from fastapi import APIRouter, Request, HTTPException, Form, BackgroundTasks
 from fastapi.responses import RedirectResponse, JSONResponse
 from email.mime.text import MIMEText
 
 from .oauth_config import oauth, BASE_URL, FRONTEND_URL
+from model.template_manager import auto_save_template_from_email
 from .session_manager import (
     create_session,
     get_session,
@@ -119,7 +120,8 @@ async def send_email(
     to: str = Form(..., description="Recipient email address"),
     subject: str = Form(..., description="Email subject"),
     html_body: str = Form(..., description="HTML email body"),
-    cc: Optional[str] = Form(None, description="Comma-separated list of CC emails")
+    cc: Optional[str] = Form(None, description="Comma-separated list of CC emails"),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """Sends an email using the session's credentials"""
     
@@ -162,6 +164,14 @@ async def send_email(
             
             if send_response.status_code != 200:
                 raise HTTPException(500, f"Failed to send email: {send_response.text}")
+            
+            # Auto-save template in background
+            background_tasks.add_task(
+                auto_save_template_from_email, 
+                subject=subject, 
+                html_content=html_body, 
+                user_email=email
+            )
             
             return {
                 "status": "sent",

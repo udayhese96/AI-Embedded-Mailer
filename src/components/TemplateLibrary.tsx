@@ -43,17 +43,16 @@ export function TemplateLibrary({
 
       {/* Filter Tabs */}
       <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
-        {['all', 'welcome', 'newsletter', 'promotional', 'follow-up', 'custom'].map((cat) => (
+        {['all', 'general', 'marketing', 'business', 'personal', 'newsletter', 'promotional', 'onboarding'].map((cat) => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            className={`px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${
-              filter === cat
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+            className={`px-4 py-2 border-b-2 transition-colors whitespace-nowrap capitalize ${filter === cat
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
           >
-            {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
+            {cat.replace('-', ' ')}
           </button>
         ))}
       </div>
@@ -62,26 +61,50 @@ export function TemplateLibrary({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTemplates.map((template) => (
           <div key={template.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            {/* Thumbnail */}
-            <div className="relative h-48 bg-gradient-to-br from-purple-100 to-pink-100 overflow-hidden">
-              {template.thumbnail ? (
-                <img src={template.thumbnail} alt={template.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-purple-600 text-4xl">✉</div>
+            {/* Thumbnail / Live Preview */}
+            <div className="relative h-64 bg-gray-100 overflow-hidden group-hover:shadow-inner transition-all">
+              <div className="w-[300%] h-[300%] origin-top-left transform scale-[0.33]">
+                <iframe
+                  srcDoc={template.html}
+                  className="w-full h-full border-0 pointer-events-none bg-white"
+                  title={`Preview of ${template.name}`}
+                  tabIndex={-1}
+                />
+              </div>
+
+              {/* Overlay to catch clicks and show actions on hover/focus could be added here if needed, 
+                  but the pointer-events-none on iframe handles the interaction blocking. 
+                  We add a transparent div just to be sure clicks go to the card if needed. */}
+              <div className="absolute inset-0 bg-transparent" />
+
+              {template.isCustom && (
+                <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded shadow-sm">
+                  User Template
                 </div>
               )}
-              {template.isCustom && (
-                <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded">
-                  Custom
+              {template.visibility === 'public' && (
+                <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded shadow-sm">
+                  Public
                 </div>
               )}
             </div>
 
             {/* Content */}
             <div className="p-4">
-              <h3 className="text-gray-900 mb-1">{template.name}</h3>
-              <p className="text-sm text-gray-500 mb-4 line-clamp-2">{template.subject}</p>
+              <div className="flex justify-between items-start mb-1">
+                <h3 className="text-gray-900 font-semibold truncate flex-1" title={template.name}>{template.name}</h3>
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full capitalize ml-2">
+                  {template.category}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 mb-2 line-clamp-1" title={template.subject}>
+                <span className="font-medium">Subject:</span> {template.subject}
+              </p>
+              {template.description && (
+                <p className="text-xs text-gray-400 mb-4 line-clamp-2" title={template.description}>
+                  {template.description}
+                </p>
+              )}
 
               {/* Actions */}
               <div className="flex gap-2">
