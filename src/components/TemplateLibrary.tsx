@@ -63,12 +63,13 @@ export function TemplateLibrary({
           <div key={template.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
             {/* Thumbnail / Live Preview */}
             <div className="relative h-64 bg-gray-100 overflow-hidden group-hover:shadow-inner transition-all">
-              <div className="w-[300%] h-[300%] origin-top-left transform scale-[0.33]">
+              <div className="w-[400%] h-[400%] origin-top-left transform scale-[0.25]">
                 <iframe
                   srcDoc={template.html}
                   className="w-full h-full border-0 pointer-events-none bg-white"
                   title={`Preview of ${template.name}`}
                   tabIndex={-1}
+                  sandbox="allow-same-origin"
                 />
               </div>
 
