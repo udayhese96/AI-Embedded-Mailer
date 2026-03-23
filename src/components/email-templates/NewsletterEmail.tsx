@@ -17,7 +17,7 @@ export function NewsletterEmail() {
       <tr>
         <td style={{ padding: '30px', textAlign: 'center', backgroundColor: '#1a1a1a' }}>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '1px' }}>
-            WEBFUDGE
+            MAILCRAFT AI
           </div>
           <div style={{ fontSize: '11px', color: '#999999', marginTop: '5px', letterSpacing: '2px' }}>
             MARKETING INSIGHTS & UPDATES
@@ -174,7 +174,7 @@ export function NewsletterEmail() {
             <tr>
               <td style={{ textAlign: 'center', paddingBottom: '20px' }}>
                 <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1a1a1a', marginBottom: '5px' }}>
-                  WEBFUDGE
+                  MAILCRAFT AI
                 </div>
               </td>
             </tr>
@@ -188,7 +188,7 @@ export function NewsletterEmail() {
           </p>
           
           <p style={{ fontSize: '12px', lineHeight: '18px', color: '#999999', margin: '20px 0 0 0', textAlign: 'center' }}>
-            © 2025 WebFudge. All rights reserved.
+            © 2025 Mailcraft AI. All rights reserved.
             <br />
             <a href="#" style={{ color: '#999999', textDecoration: 'underline' }}>Unsubscribe</a> | 
             <a href="#" style={{ color: '#999999', textDecoration: 'underline' }}> Preferences</a>

@@ -17,7 +17,7 @@ export function WelcomeEmail() {
       <tr>
         <td style={{ padding: '40px 30px', textAlign: 'center', backgroundColor: '#1a1a1a' }}>
           <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '1px' }}>
-            WEBFUDGE
+            MAILCRAFT AI
           </div>
           <div style={{ fontSize: '12px', color: '#999999', marginTop: '5px', letterSpacing: '2px' }}>
             DIGITAL MARKETING AGENCY
@@ -37,7 +37,7 @@ export function WelcomeEmail() {
             }}
           >
             <h1 style={{ margin: '0 0 15px 0', fontSize: '32px', fontWeight: '700', color: '#ffffff' }}>
-              Welcome to WebFudge! 🎉
+              Welcome to Mailcraft AI! 🎉
             </h1>
             <p style={{ margin: '0', fontSize: '18px', color: '#ffffff', opacity: 0.95 }}>
               We're excited to have you on board
@@ -53,7 +53,7 @@ export function WelcomeEmail() {
             Hi there! 👋
           </p>
           <p style={{ fontSize: '16px', lineHeight: '24px', color: '#333333', margin: '0 0 20px 0' }}>
-            Thank you for choosing WebFudge as your digital marketing partner. We're thrilled to help you 
+            Thank you for choosing Mailcraft AI as your digital marketing partner. We're thrilled to help you 
             grow your online presence and achieve your business goals.
           </p>
           <p style={{ fontSize: '16px', lineHeight: '24px', color: '#333333', margin: '0 0 30px 0' }}>
@@ -148,9 +148,9 @@ export function WelcomeEmail() {
           </table>
 
           <p style={{ fontSize: '12px', lineHeight: '18px', color: '#999999', margin: '20px 0 0 0', textAlign: 'center' }}>
-            © 2025 WebFudge. All rights reserved.
+            © 2025 Mailcraft AI. All rights reserved.
             <br />
-            You're receiving this email because you signed up for WebFudge services.
+            You're receiving this email because you signed up for Mailcraft AI services.
           </p>
         </td>
       </tr>

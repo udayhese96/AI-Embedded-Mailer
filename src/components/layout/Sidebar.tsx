@@ -91,24 +91,12 @@ export function Sidebar({ children }: SidebarProps) {
                 }}
             >
                 {/* Logo */}
-                <div style={{ padding: 24, borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{
-                            width: 40,
-                            height: 40,
-                            background: 'linear-gradient(to bottom right, #9333ea, #ec4899)',
-                            borderRadius: 8,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}>
-                            <Mail style={{ width: 24, height: 24, color: '#ffffff' }} />
-                        </div>
-                        <div>
-                            <h1 style={{ color: '#111827', fontWeight: 600, margin: 0 }}>WebFudge</h1>
-                            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Email Studio</p>
-                        </div>
-                    </div>
+                <div style={{ padding: 16, borderBottom: '1px solid #e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img
+                        src="/Logo.png"
+                        alt="Logo"
+                        style={{ maxWidth: '100%', maxHeight: 64, objectFit: 'contain' }}
+                    />
                 </div>
 
                 {/* Navigation */}
@@ -139,38 +127,7 @@ export function Sidebar({ children }: SidebarProps) {
                     </div>
                 </nav>
 
-                {/* Footer */}
-                <div style={{ padding: 16, borderTop: '1px solid #e5e7eb', flexShrink: 0 }}>
-                    <div style={{
-                        background: 'linear-gradient(to bottom right, #f3e8ff, #fce7f3)',
-                        borderRadius: 8,
-                        padding: 16,
-                    }}>
-                        <h3 style={{ fontSize: 14, color: '#111827', marginBottom: 8, fontWeight: 500 }}>
-                            Need Help?
-                        </h3>
-                        <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>
-                            Visit our website for support and resources
-                        </p>
-                        <a
-                            href="https://www.webfudge.in/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                display: 'block',
-                                textAlign: 'center',
-                                fontSize: 12,
-                                backgroundColor: '#9333ea',
-                                color: '#ffffff',
-                                padding: '8px 16px',
-                                borderRadius: 8,
-                                textDecoration: 'none',
-                            }}
-                        >
-                            Visit WebFudge.in
-                        </a>
-                    </div>
-                </div>
+
             </aside>
 
             {/* Mobile Sidebar Overlay */}

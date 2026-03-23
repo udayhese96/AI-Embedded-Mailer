@@ -14,7 +14,7 @@ export function Dashboard({ stats }: DashboardProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-gray-900 mb-2">Welcome to WebFudge Email Studio</h1>
+        <h1 className="text-gray-900 mb-2">Welcome to Mailcraft AI Email Studio</h1>
         <p className="text-gray-600">Create, customize, and send professional email campaigns</p>
       </div>
 

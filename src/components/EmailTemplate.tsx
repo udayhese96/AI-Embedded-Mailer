@@ -76,7 +76,7 @@ export function EmailTemplate() {
         <ul className="space-y-2 text-sm text-gray-700">
           <li>• <strong>Select a template</strong> from the options above</li>
           <li>• <strong>Customize</strong> the content by editing the template files in /components/email-templates/</li>
-          <li>• <strong>Replace placeholder logo</strong> with your WebFudge logo URL</li>
+          <li>• <strong>Replace placeholder logo</strong> with your Mailcraft AI logo URL</li>
           <li>• <strong>Update colors</strong> to match your brand identity</li>
           <li>• <strong>Copy HTML</strong> and paste into your email marketing platform</li>
           <li>• <strong>Test</strong> in multiple email clients before sending</li>

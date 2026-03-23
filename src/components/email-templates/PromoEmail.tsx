@@ -17,7 +17,7 @@ export function PromoEmail() {
       <tr>
         <td style={{ padding: '25px 30px', textAlign: 'center', backgroundColor: '#1a1a1a' }}>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '1px' }}>
-            WEBFUDGE
+            MAILCRAFT AI
           </div>
         </td>
       </tr>
@@ -183,7 +183,7 @@ export function PromoEmail() {
         <td style={{ padding: '30px', backgroundColor: '#f8f9fa' }}>
           <div style={{ textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
             <p style={{ fontSize: '16px', lineHeight: '24px', color: '#333333', fontStyle: 'italic', margin: '0 0 15px 0' }}>
-              "WebFudge transformed our online presence! Within 3 months, our engagement increased by 400% and sales doubled. Best investment we've made!"
+              "Mailcraft AI transformed our online presence! Within 3 months, our engagement increased by 400% and sales doubled. Best investment we've made!"
             </p>
             <p style={{ fontSize: '14px', color: '#666666', margin: '0' }}>
               <strong>Sarah Johnson</strong> - CEO, TechStart Inc.
@@ -200,7 +200,7 @@ export function PromoEmail() {
             <tr>
               <td style={{ textAlign: 'center', paddingBottom: '20px' }}>
                 <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', marginBottom: '10px' }}>
-                  WEBFUDGE
+                  MAILCRAFT AI
                 </div>
               </td>
             </tr>
@@ -216,7 +216,7 @@ export function PromoEmail() {
           </p>
           
           <p style={{ fontSize: '11px', lineHeight: '16px', color: '#666666', margin: '20px 0 0 0', textAlign: 'center' }}>
-            © 2025 WebFudge. All rights reserved.
+            © 2025 Mailcraft AI. All rights reserved.
             <br />
             This offer cannot be combined with other promotions.
           </p>

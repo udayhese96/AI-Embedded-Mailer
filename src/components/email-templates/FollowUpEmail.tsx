@@ -17,7 +17,7 @@ export function FollowUpEmail() {
       <tr>
         <td style={{ padding: '30px', textAlign: 'center', backgroundColor: '#1a1a1a' }}>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '1px' }}>
-            WEBFUDGE
+            MAILCRAFT AI
           </div>
           <div style={{ fontSize: '11px', color: '#999999', marginTop: '5px', letterSpacing: '2px' }}>
             DIGITAL MARKETING AGENCY
@@ -205,7 +205,7 @@ export function FollowUpEmail() {
             [Your Name]
           </p>
           <p style={{ fontSize: '14px', color: '#666666', margin: '0' }}>
-            Marketing Strategist, WebFudge
+            Marketing Strategist, Mailcraft AI
           </p>
         </td>
       </tr>
@@ -217,7 +217,7 @@ export function FollowUpEmail() {
             <tr>
               <td style={{ textAlign: 'center', paddingBottom: '15px' }}>
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1a1a1a', marginBottom: '5px' }}>
-                  WEBFUDGE
+                  MAILCRAFT AI
                 </div>
               </td>
             </tr>
@@ -241,7 +241,7 @@ export function FollowUpEmail() {
           </table>
 
           <p style={{ fontSize: '12px', lineHeight: '18px', color: '#999999', margin: '20px 0 0 0', textAlign: 'center' }}>
-            © 2025 WebFudge. All rights reserved.
+            © 2025 Mailcraft AI. All rights reserved.
             <br />
             <a href="#" style={{ color: '#999999', textDecoration: 'underline' }}>Update preferences</a> | 
             <a href="#" style={{ color: '#999999', textDecoration: 'underline' }}> Unsubscribe</a>

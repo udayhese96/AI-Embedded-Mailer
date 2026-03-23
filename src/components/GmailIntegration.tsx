@@ -44,7 +44,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
           <div>
             <h3 className="text-blue-900 mb-2">About Gmail Integration</h3>
             <p className="text-sm text-blue-800 mb-3">
-              Connect your Gmail account to send professional emails directly from WebFudge Email Studio.
+              Connect your Gmail account to send professional emails directly from Mailcraft AI Email Studio.
               Your credentials are secure and we only request necessary permissions.
             </p>
             <div className="text-sm text-blue-800 space-y-1">
@@ -203,7 +203,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
             </div>
             <h4 className="text-gray-900 mb-2">Grant Permission</h4>
             <p className="text-sm text-gray-600">
-              Allow WebFudge to send emails on your behalf using OAuth 2.0
+              Allow Mailcraft AI to send emails on your behalf using OAuth 2.0
             </p>
           </div>
 

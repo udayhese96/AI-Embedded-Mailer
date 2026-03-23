@@ -5,13 +5,13 @@ export const preloadedTemplates: EmailTemplate[] = [
     id: 'welcome-template',
     name: 'Welcome Email',
     category: 'welcome',
-    subject: 'Welcome to WebFudge - Let\'s Build Something Amazing!',
+    subject: 'Welcome to Mailcraft AI - Let\'s Build Something Amazing!',
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to WebFudge</title>
+    <title>Welcome to Mailcraft AI</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 0;">
@@ -23,7 +23,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <!-- Header with Logo and Gradient -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center; border-radius: 8px 8px 0 0;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 32px;">WebFudge</h1>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 32px;">Mailcraft AI</h1>
                                     <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Marketing Excellence</p>
                                 </td>
                             </tr>
@@ -34,7 +34,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                                     <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Welcome Aboard!</h2>
                                     
                                     <p style="color: #666666; margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">
-                                        Thank you for choosing WebFudge as your digital marketing partner. We're excited to help you achieve your business goals and elevate your online presence.
+                                        Thank you for choosing Mailcraft AI as your digital marketing partner. We're excited to help you achieve your business goals and elevate your online presence.
                                     </p>
                                     
                                     <p style="color: #666666; margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">
@@ -62,7 +62,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <tr>
                                 <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef;">
                                     <p style="color: #999999; margin: 0 0 10px 0; font-size: 14px;">
-                                        © 2025 WebFudge. All rights reserved.
+                                        © 2025 Mailcraft AI. All rights reserved.
                                     </p>
                                     <p style="color: #999999; margin: 0; font-size: 14px;">
                                         <a href="https://www.webfudge.in/" style="color: #667eea; text-decoration: none;">Visit our website</a>
@@ -86,13 +86,13 @@ export const preloadedTemplates: EmailTemplate[] = [
     id: 'newsletter-template',
     name: 'Newsletter',
     category: 'newsletter',
-    subject: 'WebFudge Monthly Newsletter - Digital Marketing Insights',
+    subject: 'Mailcraft AI Monthly Newsletter - Digital Marketing Insights',
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebFudge Newsletter</title>
+    <title>Mailcraft AI Newsletter</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 0;">
@@ -104,7 +104,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <!-- Header -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px;">WebFudge Newsletter</h1>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Mailcraft AI Newsletter</h1>
                                     <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">December 2025 Edition</p>
                                 </td>
                             </tr>
@@ -163,7 +163,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <tr>
                                 <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef;">
                                     <p style="color: #999999; margin: 0 0 10px 0; font-size: 14px;">
-                                        © 2025 WebFudge. All rights reserved.
+                                        © 2025 Mailcraft AI. All rights reserved.
                                     </p>
                                     <p style="color: #999999; margin: 0 0 10px 0; font-size: 14px;">
                                         <a href="https://www.webfudge.in/" style="color: #667eea; text-decoration: none;">Visit Website</a> | 
@@ -188,13 +188,13 @@ export const preloadedTemplates: EmailTemplate[] = [
     id: 'promotional-template',
     name: 'Promotional Offer',
     category: 'promotional',
-    subject: 'Special Offer: 20% Off WebFudge Marketing Services',
+    subject: 'Special Offer: 20% Off Mailcraft AI Marketing Services',
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Special Offer from WebFudge</title>
+    <title>Special Offer from Mailcraft AI</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 0;">
@@ -206,7 +206,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <!-- Header -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center; border-radius: 8px 8px 0 0;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 32px;">WebFudge</h1>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 32px;">Mailcraft AI</h1>
                                 </td>
                             </tr>
                             
@@ -224,7 +224,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                                     <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px; text-align: center;">Exclusive Discount on All Services</h2>
                                     
                                     <p style="color: #666666; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; text-align: center;">
-                                        For a limited time, get 20% off on all WebFudge marketing services. Whether you need SEO, social media management, or content marketing, we've got you covered.
+                                        For a limited time, get 20% off on all Mailcraft AI marketing services. Whether you need SEO, social media management, or content marketing, we've got you covered.
                                     </p>
                                     
                                     <!-- Services List -->
@@ -281,7 +281,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <tr>
                                 <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef;">
                                     <p style="color: #999999; margin: 0 0 10px 0; font-size: 14px;">
-                                        © 2025 WebFudge. All rights reserved.
+                                        © 2025 Mailcraft AI. All rights reserved.
                                     </p>
                                     <p style="color: #999999; margin: 0; font-size: 14px;">
                                         <a href="https://www.webfudge.in/" style="color: #667eea; text-decoration: none;">Visit our website</a>
@@ -305,13 +305,13 @@ export const preloadedTemplates: EmailTemplate[] = [
     id: 'follow-up-template',
     name: 'Follow-Up Email',
     category: 'follow-up',
-    subject: 'Following Up - WebFudge Marketing Solutions',
+    subject: 'Following Up - Mailcraft AI Marketing Solutions',
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Follow-Up from WebFudge</title>
+    <title>Follow-Up from Mailcraft AI</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f5f5f5; padding: 40px 0;">
@@ -323,7 +323,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <!-- Header -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px;">WebFudge</h1>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Mailcraft AI</h1>
                                 </td>
                             </tr>
                             
@@ -341,7 +341,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                                     </p>
                                     
                                     <p style="color: #666666; margin: 0 0 24px 0; font-size: 16px; line-height: 1.6;">
-                                        At WebFudge, we specialize in creating data-driven marketing strategies that deliver measurable results. Here's what we can help you with:
+                                        At Mailcraft AI, we specialize in creating data-driven marketing strategies that deliver measurable results. Here's what we can help you with:
                                     </p>
                                     
                                     <!-- Benefits -->
@@ -391,7 +391,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                                     
                                     <p style="color: #666666; margin: 16px 0 0 0; font-size: 16px; line-height: 1.6;">
                                         Best regards,<br>
-                                        The WebFudge Team
+                                        The Mailcraft AI Team
                                     </p>
                                 </td>
                             </tr>
@@ -400,7 +400,7 @@ export const preloadedTemplates: EmailTemplate[] = [
                             <tr>
                                 <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef;">
                                     <p style="color: #999999; margin: 0 0 10px 0; font-size: 14px;">
-                                        © 2025 WebFudge. All rights reserved.
+                                        © 2025 Mailcraft AI. All rights reserved.
                                     </p>
                                     <p style="color: #999999; margin: 0; font-size: 14px;">
                                         <a href="https://www.webfudge.in/" style="color: #667eea; text-decoration: none;">Visit our website</a>
