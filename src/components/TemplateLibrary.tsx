@@ -119,23 +119,24 @@ export function TemplateLibrary({
         {templates.map((template) => (
           <div
             key={template.id}
-            className="flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+            className="flex flex-col bg-white rounded-xl overflow-hidden"
+            style={{
+              border: '1.5px solid #ede9fe',
+              boxShadow: '0 2px 12px rgba(124,58,237,0.07)',
+              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 32px rgba(124,58,237,0.15)';
+              (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(124,58,237,0.07)';
+              (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+            }}
           >
             {/* Thumbnail / Live Preview */}
             <div className="relative flex-shrink-0" style={{ height: PREVIEW_H }}>
               <TemplatePreview html={template.html} name={template.name} />
-
-              {/* Badges on top of preview */}
-              {template.isCustom && (
-                <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-sm z-10 font-medium">
-                  User Template
-                </div>
-              )}
-              {template.visibility === 'public' && (
-                <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full shadow-sm z-10 font-medium">
-                  Public
-                </div>
-              )}
             </div>
 
             {/* Divider */}
@@ -186,8 +187,9 @@ export function TemplateLibrary({
                   className={`flex items-center justify-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all font-medium shadow-sm ${
                     copiedId === template.id
                       ? 'bg-green-100 text-green-900 border border-green-300'
-                      : 'bg-purple-600 text-white hover:bg-purple-700'
+                      : 'text-white'
                   }`}
+                  style={copiedId !== template.id ? { background: 'linear-gradient(135deg, #7c3aed, #2563eb)' } : {}}
                 >
                   {copiedId === template.id ? (
                     <><Check className="w-4 h-4" />Copied!</>

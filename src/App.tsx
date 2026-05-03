@@ -254,7 +254,7 @@ export default function App() {
         {/* Dashboard */}
         <Route
           path="/"
-          element={<DashboardPage stats={stats} />}
+          element={<DashboardPage />}
         />
 
         {/* Templates */}

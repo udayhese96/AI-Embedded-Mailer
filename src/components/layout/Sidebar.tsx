@@ -50,7 +50,7 @@ export function Sidebar({ children }: SidebarProps) {
     const showSidebar = isDesktop || isSidebarOpen;
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(160deg, #f5f3ff 0%, #eff6ff 60%, #f8fafc 100%)' }}>
             {/* Mobile Menu Button - only visible on mobile */}
             {!isDesktop && (
                 <button
@@ -80,22 +80,39 @@ export function Sidebar({ children }: SidebarProps) {
                     left: 0,
                     width: SIDEBAR_WIDTH,
                     height: '100vh',
-                    backgroundColor: '#ffffff',
-                    borderRight: '1px solid #e5e7eb',
+                    background: '#ffffff',
+                    borderRight: '1px solid #ede9fe',
                     zIndex: 40,
                     transform: showSidebar ? 'translateX(0)' : 'translateX(-100%)',
                     transition: 'transform 0.2s ease-in-out',
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'hidden',
+                    boxShadow: '4px 0 24px rgba(124,58,237,0.07)',
                 }}
             >
-                {/* Logo */}
-                <div style={{ padding: 16, borderBottom: '1px solid #e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Logo area — full width, white background */}
+                <div style={{
+                    width: '100%',
+                    height: 90,
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#ffffff',
+                    borderBottom: '1px solid #ede9fe',
+                    padding: '8px 12px',
+                    boxSizing: 'border-box',
+                }}>
                     <img
                         src="/Logo.png"
-                        alt="Logo"
-                        style={{ maxWidth: '100%', maxHeight: 64, objectFit: 'contain' }}
+                        alt="Mailcraft AI"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            objectPosition: 'center',
+                        }}
                     />
                 </div>
 
@@ -106,22 +123,40 @@ export function Sidebar({ children }: SidebarProps) {
                             <NavLink
                                 key={item.path}
                                 to={item.path}
+                                end={item.path === '/'}
                                 onClick={() => setIsSidebarOpen(false)}
                                 style={({ isActive }) => ({
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 12,
-                                    padding: '12px 16px',
-                                    borderRadius: 8,
+                                    padding: '11px 14px',
+                                    borderRadius: 10,
                                     textDecoration: 'none',
-                                    transition: 'all 0.2s',
-                                    backgroundColor: isActive ? '#f3e8ff' : 'transparent',
-                                    color: isActive ? '#7c3aed' : '#374151',
-                                    fontWeight: isActive ? 500 : 400,
+                                    transition: 'all 0.18s ease',
+                                    background: isActive
+                                        ? 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #2563eb 100%)'
+                                        : 'transparent',
+                                    color: isActive ? '#ffffff' : '#4b5563',
+                                    fontWeight: isActive ? 600 : 400,
+                                    fontSize: '0.9rem',
+                                    boxShadow: isActive ? '0 4px 14px rgba(124,58,237,0.35)' : 'none',
                                 })}
                             >
-                                <item.icon style={{ width: 20, height: 20 }} />
-                                <span>{item.label}</span>
+                                {({ isActive }) => (
+                                    <>
+                                        <span style={{
+                                            width: 32, height: 32,
+                                            borderRadius: 8,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            background: isActive ? 'rgba(255,255,255,0.2)' : '#f3e8ff',
+                                            flexShrink: 0,
+                                            transition: 'background 0.18s',
+                                        }}>
+                                            <item.icon style={{ width: 16, height: 16, color: isActive ? '#fff' : '#7c3aed' }} />
+                                        </span>
+                                        <span>{item.label}</span>
+                                    </>
+                                )}
                             </NavLink>
                         ))}
                     </div>

@@ -20,6 +20,8 @@ export function TemplatePreviewModal({
 }: TemplatePreviewModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [closeHovered, setCloseHovered] = useState(false);
+  const [copyHovered, setCopyHovered] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -75,101 +77,214 @@ export function TemplatePreviewModal({
   if (!isOpen) return null;
 
   return (
-    /* Overlay */
+    /* ── Overlay ── */
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className={[
-        'fixed inset-0 z-50',
-        'bg-blue-950/60 backdrop-blur-sm',
-        'flex items-center justify-center',
-        'px-2 py-4 sm:px-4',
-        /* entrance animation */
-        'animate-[fadeIn_200ms_ease-out]',
-      ].join(' ')}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        background: 'rgba(30, 27, 75, 0.65)',  /* deep indigo tint */
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
+        animation: 'fadeIn 200ms ease-out',
+      }}
       role="dialog"
       aria-modal="true"
       aria-label="Email Preview"
     >
-      {/* Modal container */}
+      {/* ── Modal container ── */}
       <div
-        className={[
-          'relative flex flex-col',
-          'bg-white rounded-2xl',
-          /* dark popup border for clear visual separation */
-          'border-2 border-gray-900',
-          /* layered shadow: tight dark ring + wide soft glow */
-          'shadow-[0_0_0_1px_rgba(0,0,0,0.85),0_24px_60px_-8px_rgba(0,0,0,0.6)]',
-          'w-full max-w-4xl',
-          'max-h-[95vh] sm:max-h-[90vh]',
-          'overflow-hidden',
-          /* entrance animation */
-          'animate-[scaleIn_220ms_cubic-bezier(0.16,1,0.3,1)]',
-        ].join(' ')}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          background: '#ffffff',
+          borderRadius: '1.25rem',
+          /* Purple-themed border matching template cards */
+          border: '2px solid #7c3aed',
+          /* Layered purple shadow */
+          boxShadow: '0 0 0 1px rgba(124,58,237,0.15), 0 32px 80px -8px rgba(79,46,209,0.45)',
+          width: '100%',
+          maxWidth: '52rem',
+          maxHeight: '92vh',
+          overflow: 'hidden',
+          animation: 'scaleIn 220ms cubic-bezier(0.16,1,0.3,1)',
+        }}
       >
-        {/* ── Sticky header ── */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-4 bg-white border-b border-gray-100 flex-shrink-0">
+        {/* ── Gradient header ── */}
+        <div
+          style={{
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            padding: '0.9rem 1.25rem',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 55%, #2563eb 100%)',
+            borderBottom: '1px solid rgba(255,255,255,0.15)',
+          }}
+        >
           {/* Left — icon + title */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
-              <Mail className="w-4 h-4 text-purple-600" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+            <div style={{
+              flexShrink: 0,
+              width: 36, height: 36,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Mail style={{ width: 16, height: 16, color: '#fff' }} />
             </div>
-            <div className="min-w-0">
-              <h2 className="text-gray-900 font-semibold text-base leading-snug truncate">
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                lineHeight: 1.3,
+                margin: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
                 {templateName}
               </h2>
               {templateSubject && (
-                <p className="text-xs text-gray-400 truncate mt-0.5">
+                <p style={{
+                  color: 'rgba(221,214,254,0.85)',
+                  fontSize: '0.72rem',
+                  margin: '2px 0 0',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
                   {templateSubject}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Right — close button */}
+          {/* Close button */}
           <button
             onClick={onClose}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+            onMouseEnter={() => setCloseHovered(true)}
+            onMouseLeave={() => setCloseHovered(false)}
             aria-label="Close preview"
+            style={{
+              flexShrink: 0,
+              width: 32, height: 32,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: '50%',
+              background: closeHovered ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              color: '#fff',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
           >
-            <X className="w-4 h-4" />
+            <X style={{ width: 16, height: 16 }} />
           </button>
         </div>
 
+        {/* 3-px gradient accent line below header */}
+        <div style={{ height: 3, background: 'linear-gradient(90deg, #7c3aed, #4f46e5, #2563eb)', flexShrink: 0 }} />
+
         {/* ── Email iframe ── */}
-        <div className="flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+        <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           <iframe
             srcDoc={htmlContent}
             title="Email Preview"
-            className="w-full border-0 block"
-            style={{ height: 'clamp(400px, 70vh, 780px)' }}
+            style={{
+              width: '100%',
+              height: 'clamp(380px, 65vh, 740px)',
+              border: 0,
+              display: 'block',
+            }}
             scrolling="yes"
             sandbox="allow-same-origin"
           />
         </div>
 
         {/* ── Footer ── */}
-        <div className="flex-shrink-0 flex items-center gap-2 px-5 py-3 border-t border-gray-100 bg-gray-50/70">
+        <div style={{
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          padding: '0.85rem 1.25rem',
+          borderTop: '1px solid #ede9fe',
+          background: 'linear-gradient(135deg, #faf5ff 0%, #eff6ff 100%)',
+        }}>
+          {/* Copy HTML — gradient button */}
           <button
             onClick={handleCopy}
-            className={`flex items-center gap-2 text-sm font-medium px-5 py-2 rounded-xl transition-all duration-200 shadow-sm focus:outline-none focus-visible:ring-2 ${
-              copied
-                ? 'bg-green-100 text-green-900 border border-green-300 focus-visible:ring-green-400'
-                : 'bg-purple-600 hover:bg-purple-700 active:scale-[0.98] text-white focus-visible:ring-purple-400'
-            }`}
+            onMouseEnter={() => setCopyHovered(true)}
+            onMouseLeave={() => setCopyHovered(false)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.45rem',
+              padding: '0.55rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              transform: copyHovered ? 'scale(1.03)' : 'scale(1)',
+              ...(copied
+                ? { background: '#dcfce7', color: '#14532d', border: '1px solid #86efac' }
+                : {
+                    background: 'linear-gradient(135deg, #7c3aed, #2563eb)',
+                    color: '#fff',
+                    boxShadow: copyHovered
+                      ? '0 8px 20px rgba(124,58,237,0.45)'
+                      : '0 4px 12px rgba(124,58,237,0.3)',
+                  }
+              ),
+            }}
           >
             {copied ? (
-              <><Check className="w-4 h-4" /><span>Copied!</span></>
+              <><Check style={{ width: 15, height: 15 }} /><span>Copied!</span></>
             ) : (
-              <><Code2 className="w-4 h-4" /><span>Copy HTML</span></>
+              <><Code2 style={{ width: 15, height: 15 }} /><span>Copy HTML</span></>
             )}
           </button>
+
+          {/* Close — secondary outline button */}
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+            style={{
+              display: 'flex', alignItems: 'center',
+              padding: '0.55rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: '1.5px solid #c4b5fd',
+              background: '#fff',
+              color: '#6d28d9',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = '#f5f3ff';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#7c3aed';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = '#fff';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#c4b5fd';
+            }}
           >
             Close
           </button>
+
+          {/* ESC hint */}
+          <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: '#a78bfa', letterSpacing: '0.03em' }}>
+            Press <kbd style={{ background: '#ede9fe', border: '1px solid #c4b5fd', borderRadius: 4, padding: '1px 5px', fontFamily: 'monospace', color: '#6d28d9' }}>ESC</kbd> to close
+          </span>
         </div>
       </div>
     </div>
