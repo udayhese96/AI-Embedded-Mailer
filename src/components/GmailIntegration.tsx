@@ -38,16 +38,18 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
       </div>
 
       {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+      <div style={{ background: 'linear-gradient(135deg, #faf5ff 0%, #eff6ff 100%)', border: '1.5px solid #c4b5fd', borderRadius: '1rem', padding: '1.5rem' }}>
         <div className="flex gap-4">
-          <Info className="w-6 h-6 text-blue-600 flex-shrink-0" />
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Info style={{ width: 18, height: 18, color: '#7c3aed' }} />
+          </div>
           <div>
-            <h3 className="text-blue-900 mb-2">About Gmail Integration</h3>
-            <p className="text-sm text-blue-800 mb-3">
+            <h3 style={{ color: '#4c1d95', marginBottom: 8 }}>About Gmail Integration</h3>
+            <p className="text-sm" style={{ color: '#5b21b6', marginBottom: 12 }}>
               Connect your Gmail account to send professional emails directly from Mailcraft AI Email Studio.
               Your credentials are secure and we only request necessary permissions.
             </p>
-            <div className="text-sm text-blue-800 space-y-1">
+            <div className="text-sm space-y-1" style={{ color: '#6d28d9' }}>
               <div>✓ Send emails using your Gmail account</div>
               <div>✓ Track email delivery status</div>
               <div>✓ Maintain your professional email signature</div>
@@ -64,21 +66,19 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
           onSuccess={() => setShowTemplateForm(false)}
         />
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-row items-center justify-between">
+        <div style={{ background: '#fff', borderRadius: '1rem', border: '1.5px solid #ede9fe', boxShadow: '0 2px 12px rgba(124,58,237,0.07)', padding: '1.5rem', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
           <div>
-            <h3 className="text-gray-900 mb-1 flex items-center gap-2">
-              <Settings className="w-5 h-5" />
+            <h3 style={{ color: '#1e1b4b', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Settings style={{ width: 18, height: 18, color: '#7c3aed' }} />
               Template Management
             </h3>
-            <p className="text-sm text-gray-500">
-              Add new email templates to the system database
-            </p>
+            <p className="text-sm" style={{ color: '#9ca3af' }}>Add new email templates to the system database</p>
           </div>
           <button
             onClick={() => setShowTemplateForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.55rem 1.1rem', background: 'linear-gradient(135deg, #7c3aed, #2563eb)', color: '#fff', border: 'none', borderRadius: '0.7rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}
           >
-            <Plus className="w-4 h-4" />
+            <Plus style={{ width: 16, height: 16 }} />
             Add New Template
           </button>
         </div>
@@ -87,7 +87,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
       {/* Connection Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Current Status Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div style={{ background: '#fff', borderRadius: '1rem', border: '1.5px solid #ede9fe', boxShadow: '0 2px 12px rgba(124,58,237,0.07)', padding: '1.5rem' }}>
           <h3 className="text-gray-900 mb-4 flex items-center gap-2">
             <Settings className="w-5 h-5" />
             Connection Status
@@ -143,7 +143,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
         </div>
 
         {/* Connect New Account Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div style={{ background: '#fff', borderRadius: '1rem', border: '1.5px solid #ede9fe', boxShadow: '0 2px 12px rgba(124,58,237,0.07)', padding: '1.5rem' }}>
           <h3 className="text-gray-900 mb-4 flex items-center gap-2">
             <Link2 className="w-5 h-5" />
             {connection.isConnected ? 'Switch Account' : 'Connect Account'}
@@ -153,7 +153,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
             <button
               onClick={handleConnect}
               disabled={isConnecting}
-              className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #7c3aed, #2563eb)', color: '#fff', padding: '0.85rem 1.5rem', borderRadius: '0.75rem', border: 'none', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 6px 18px rgba(124,58,237,0.35)', transition: 'opacity 0.2s' }}
             >
               {isConnecting ? (
                 <>
@@ -183,7 +183,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
       </div>
 
       {/* How It Works */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div style={{ background: '#fff', borderRadius: '1rem', border: '1.5px solid #ede9fe', boxShadow: '0 2px 12px rgba(124,58,237,0.07)', padding: '1.5rem' }}>
         <h3 className="text-gray-900 mb-4">How Gmail Integration Works</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -220,7 +220,7 @@ export function GmailIntegration({ connection, onConnect, onDisconnect, onBack }
       </div>
 
       {/* Technical Requirements (Demo Note) */}
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+      <div style={{ background: 'linear-gradient(135deg, #faf5ff, #eff6ff)', border: '1.5px solid #ede9fe', borderRadius: '1rem', padding: '1.5rem' }}>
         <h3 className="text-gray-900 mb-3">Technical Implementation Note</h3>
         <p className="text-sm text-gray-600 mb-3">
           This is a frontend demo. In a production environment, Gmail integration would require:

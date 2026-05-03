@@ -127,14 +127,14 @@ export function EmailComposer({ template, gmailConnection, onBack, onSend }: Ema
         <div className="flex gap-3">
           <button
             onClick={() => setShowPreview(true)}
-            className="flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.65rem 1.4rem', background: '#fff', border: '1.5px solid #c4b5fd', color: '#7c3aed', borderRadius: '0.7rem', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
           >
             <Eye className="w-5 h-5" />
             Preview
           </button>
           <button
             onClick={handleSend}
-            className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.65rem 1.4rem', background: 'linear-gradient(135deg, #7c3aed, #2563eb)', color: '#fff', border: 'none', borderRadius: '0.7rem', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', boxShadow: '0 4px 14px rgba(124,58,237,0.35)', transition: 'all 0.2s' }}
           >
             <Send className="w-5 h-5" />
             Send Email
@@ -172,7 +172,7 @@ export function EmailComposer({ template, gmailConnection, onBack, onSend }: Ema
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Left: form */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+        <div className="lg:col-span-2 space-y-6" style={{ background: '#fff', borderRadius: '1rem', border: '1.5px solid #ede9fe', boxShadow: '0 2px 12px rgba(124,58,237,0.07)', padding: '1.5rem' }}>
 
           {/* To */}
           <div>
@@ -198,7 +198,7 @@ export function EmailComposer({ template, gmailConnection, onBack, onSend }: Ema
               />
               <button
                 onClick={() => addEmail(toInput, 'to')}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                style={{ padding: '0.5rem 0.85rem', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', border: 'none', borderRadius: '0.6rem', cursor: 'pointer' }}
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -229,7 +229,7 @@ export function EmailComposer({ template, gmailConnection, onBack, onSend }: Ema
               />
               <button
                 onClick={() => addEmail(ccInput, 'cc')}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                style={{ padding: '0.5rem 0.85rem', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', border: 'none', borderRadius: '0.6rem', cursor: 'pointer' }}
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -261,14 +261,14 @@ export function EmailComposer({ template, gmailConnection, onBack, onSend }: Ema
         </div>
 
         {/* Right: Quick Preview (properly scaled) */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col gap-3">
+        <div style={{ background: '#fff', borderRadius: '1rem', border: '1.5px solid #ede9fe', boxShadow: '0 2px 12px rgba(124,58,237,0.07)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <h3 className="text-gray-900 flex items-center gap-2 flex-shrink-0">
             <FileText className="w-5 h-5" />
             Quick Preview
           </h3>
 
           {/* Scaled iframe wrapper */}
-          <div className="flex-1 border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+          <div style={{ flex: 1, border: '1.5px solid #ede9fe', borderRadius: '0.6rem', overflow: 'hidden', background: '#faf5ff' }}>
             {draft.html ? (
               <ScaledPreview html={draft.html} />
             ) : (
@@ -282,7 +282,7 @@ export function EmailComposer({ template, gmailConnection, onBack, onSend }: Ema
           {/* Open full-screen preview */}
           <button
             onClick={() => setShowPreview(true)}
-            className="w-full flex items-center justify-center gap-2 py-2 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0.55rem', background: '#faf5ff', border: '1.5px solid #c4b5fd', color: '#7c3aed', borderRadius: '0.6rem', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.2s' }}
           >
             <Eye className="w-4 h-4" />
             Open Full Preview
