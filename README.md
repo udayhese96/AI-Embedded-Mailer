@@ -25,6 +25,21 @@ Embedded Email Template/
 
 ---
 
+## 🏛️ System Architecture
+
+![System Architecture](./system_architecture.png)
+
+The MailCraft AI system follows a modern, decoupled full-stack architecture:
+
+1. **Frontend (React + TypeScript):** A responsive, single-page application that provides a rich user interface for the Email Studio. It allows users to design, edit, and preview email templates, as well as manage their Google authentication state.
+2. **Backend (FastAPI - Python):** The core server that acts as a secure bridge between the frontend, Google APIs, and AI services. It handles:
+   - **Google OAuth 2.0:** Manages secure authentication and session persistence for connecting users' Gmail accounts.
+   - **Gmail API Integration:** Securely dispatches emails directly through the authenticated user's Gmail account.
+   - **AI Email Generation:** Integrates with OpenAI models to dynamically generate professional HTML email templates based on user prompts.
+   - **RAG & Data Storage:** Utilizes Supabase (PostgreSQL with pgvector) and OpenAI embeddings for Retrieval-Augmented Generation, allowing semantic search of saved templates and storing user-uploaded assets.
+
+---
+
 ## 🛠️ Setup Instructions
 
 ### 1️⃣ Backend Setup (Python)
